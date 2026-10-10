@@ -21,7 +21,53 @@
 
   const items = [];
 
+  const addControls = (q, after, hint) => {
+    const controls = el('div', 'q-controls');
+    const btn = el('button', 'btn btn-small', 'Check answer');
+    btn.type = 'button';
+    controls.append(btn);
+    if (hint) controls.append(el('p', 'q-hint', hint));
+    const feedback = el('p', 'q-feedback');
+    feedback.setAttribute('role', 'status');
+    controls.append(feedback);
+    after.after(controls);
+    q.classList.add('is-quiz');
+    return { btn, feedback };
+  };
+
+  const wire = (item) => {
+    items.push(item);
+    item.btn.addEventListener('click', () => (item.result ? reset(item, true) : check(item)));
+    item.inputs.forEach((input) => {
+      input.addEventListener('change', () => { if (!item.result) item.feedback.textContent = ''; });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !item.result) { e.preventDefault(); check(item); }
+      });
+    });
+    // Opening the answer before checking shows it without scoring it.
+    if (item.details) item.details.addEventListener('toggle', () => { if (!item.result) reveal(item, item.details.open); });
+  };
+
+  // Matching question: a letter dropdown for each term.
+  const setupMatch = (q) => {
+    const rows = [...q.querySelectorAll('.match-row')];
+    const letters = [...q.querySelectorAll('.match-option .bubble')].map((b) => b.textContent.trim());
+    if (rows.length < 2 || !letters.length) return;
+    const inputs = rows.map((row, i) => {
+      const select = el('select', 'match-select');
+      select.id = `${q.id}-m${i}`;
+      const label = el('label', 'visually-hidden', `Letter for ${row.querySelector('.match-term').textContent.trim()}`);
+      label.htmlFor = select.id;
+      select.append(new Option('Choose', ''), ...letters.map((l) => new Option(l, l)));
+      row.querySelector('.match-slot').append(label, select);
+      return select;
+    });
+    const { btn, feedback } = addControls(q, q.querySelector('.match-pool'), 'Choose a letter for each term.');
+    wire({ kind: 'match', q, rows, inputs, answers: rows.map((r) => r.dataset.answer), btn, feedback, details: q.querySelector('details.answer'), result: null });
+  };
+
   questions.forEach((q) => {
+    if (q.classList.contains('q-match')) { setupMatch(q); return; }
     const choices = [...q.querySelectorAll('.choice')];
     const correct = choices.map((c, i) => (c.classList.contains('is-correct') ? i : -1)).filter((i) => i >= 0);
     if (!choices.length || !correct.length) return; // nothing to grade against
@@ -44,34 +90,23 @@
       return input;
     });
 
-    const controls = el('div', 'q-controls');
-    const btn = el('button', 'btn btn-small', 'Check answer');
-    btn.type = 'button';
-    controls.append(btn);
-    if (multi) controls.append(el('p', 'q-hint', `Choose ${correct.length} answers.`));
-    const feedback = el('p', 'q-feedback');
-    feedback.setAttribute('role', 'status');
-    controls.append(feedback);
-    list.after(controls);
-    q.classList.add('is-quiz');
-
-    const item = { q, choices, inputs, correct, multi, btn, feedback, details: q.querySelector('details.answer'), result: null };
-    items.push(item);
-
-    btn.addEventListener('click', () => (item.result ? reset(item, true) : check(item)));
-    inputs.forEach((input) => {
-      input.addEventListener('change', () => { if (!item.result) feedback.textContent = ''; });
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !item.result) { e.preventDefault(); check(item); }
-      });
-    });
-    // Opening the answer before checking shows it without scoring it.
-    if (item.details) item.details.addEventListener('toggle', () => { if (!item.result) reveal(item, item.details.open); });
+    const { btn, feedback } = addControls(q, list, multi ? `Choose ${correct.length} answers.` : '');
+    wire({ kind: 'choice', q, choices, inputs, correct, multi, btn, feedback, details: q.querySelector('details.answer'), result: null });
   });
 
   if (!items.length) return;
 
   function check(item) {
+    if (item.kind === 'match') {
+      const picked = item.inputs.map((s) => s.value);
+      if (picked.some((v) => !v)) { item.feedback.textContent = 'Choose a letter for every term first.'; return; }
+      const right = picked.every((v, i) => v === item.answers[i]);
+      apply(item, picked, right);
+      saved[item.q.id] = { picked, right };
+      save();
+      updateScore();
+      return;
+    }
     const picked = item.inputs.filter((i) => i.checked).map((i) => Number(i.value));
     const need = item.correct.length;
     if (!picked.length) {
@@ -93,13 +128,26 @@
     item.result = right ? 'right' : 'wrong';
     item.q.classList.remove('is-revealed');
     item.q.classList.add('is-checked', right ? 'is-right' : 'is-wrong');
-    item.inputs.forEach((input, i) => { input.checked = picked.includes(i); input.disabled = true; });
-    item.choices.forEach((li, i) => {
-      if (!picked.includes(i)) return;
-      li.classList.add('is-picked');
-      li.querySelector('.choice-text').append(el('span', 'pick-note', 'Your answer'));
-    });
-    item.feedback.textContent = right ? 'Correct.' : 'Incorrect. The right answer is highlighted.';
+    if (item.kind === 'match') {
+      let ok = 0;
+      item.rows.forEach((row, i) => {
+        const good = picked[i] === item.answers[i];
+        if (good) ok += 1;
+        item.inputs[i].value = picked[i];
+        item.inputs[i].disabled = true;
+        row.classList.add(good ? 'is-match-right' : 'is-match-wrong');
+        if (!good) row.querySelector('.match-slot').append(el('span', 'pick-note', `Answer: ${item.answers[i]}`));
+      });
+      item.feedback.textContent = right ? 'Correct.' : `${ok} of ${item.rows.length} matched. The right letters are shown.`;
+    } else {
+      item.inputs.forEach((input, i) => { input.checked = picked.includes(i); input.disabled = true; });
+      item.choices.forEach((li, i) => {
+        if (!picked.includes(i)) return;
+        li.classList.add('is-picked');
+        li.querySelector('.choice-text').append(el('span', 'pick-note', 'Your answer'));
+      });
+      item.feedback.textContent = right ? 'Correct.' : 'Incorrect. The right answer is highlighted.';
+    }
     item.btn.textContent = 'Try again';
     item.btn.hidden = false;
     if (item.details) item.details.open = true;
@@ -108,9 +156,9 @@
   function reset(item, user) {
     item.result = null;
     item.q.classList.remove('is-checked', 'is-right', 'is-wrong', 'is-revealed');
-    item.inputs.forEach((input) => { input.checked = false; input.disabled = false; });
-    item.choices.forEach((li) => {
-      li.classList.remove('is-picked');
+    item.inputs.forEach((input) => { input.checked = false; input.value = input.tagName === 'SELECT' ? '' : input.value; input.disabled = false; });
+    (item.kind === 'match' ? item.rows : item.choices).forEach((li) => {
+      li.classList.remove('is-picked', 'is-match-right', 'is-match-wrong');
       const note = li.querySelector('.pick-note');
       if (note) note.remove();
     });
@@ -184,6 +232,12 @@
   for (const item of items) {
     const s = saved[item.q.id];
     if (!s || !Array.isArray(s.picked)) continue;
+    if (item.kind === 'match') {
+      // Only restore if every saved letter still exists (the notes may have changed).
+      const valid = s.picked.length === item.rows.length && s.picked.every((v) => [...item.inputs[0].options].some((o) => o.value && o.value === v));
+      if (valid) apply(item, s.picked, s.picked.every((v, i) => v === item.answers[i]));
+      continue;
+    }
     const picked = s.picked.filter((i) => Number.isInteger(i) && i >= 0 && i < item.inputs.length);
     if (!picked.length) continue;
     apply(item, picked, picked.length === item.correct.length && picked.every((i) => item.correct.includes(i)));

@@ -37,6 +37,8 @@ const FONT_SOURCES = {
   'Atkinson Hyperlegible': { pkg: 'atkinson-hyperlegible', faces: [[400, 'normal'], [400, 'italic'], [700, 'normal']], fallback: 'system-ui, sans-serif' },
   'Barlow Condensed': { pkg: 'barlow-condensed', faces: [[500, 'normal'], [700, 'normal']], fallback: "'Arial Narrow', system-ui, sans-serif" },
   'Bricolage Grotesque': { pkg: 'bricolage-grotesque', faces: [[500, 'normal'], [800, 'normal']], fallback: 'system-ui, sans-serif' },
+  'Kalam': { pkg: 'kalam', faces: [[700, 'normal']], fallback: "'Segoe Print', 'Comic Sans MS', cursive" },
+  'Red Hat Display': { pkg: 'red-hat-display', faces: [[700, 'normal'], [900, 'normal']], fallback: 'system-ui, sans-serif' },
   'Zilla Slab': { pkg: 'zilla-slab', faces: [[600, 'normal'], [700, 'normal']], fallback: 'Rockwell, Georgia, serif' },
   'JetBrains Mono': { pkg: 'jetbrains-mono', faces: [[400, 'normal'], [700, 'normal']], fallback: 'ui-monospace, Consolas, monospace' },
 };
@@ -59,7 +61,8 @@ const splitPrefix = (name) => {
   return m ? { num: Number(m[1]), rest: name.slice(m[0].length) } : { num: null, rest: name };
 };
 const humanize = (s) => {
-  const t = s.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+  // Hyphens between digits stay ("DevNet1-3"); other hyphens become spaces.
+  const t = s.replace(/_+|(?<!\d)-+|-+(?!\d)/g, ' ').replace(/\s+/g, ' ').trim();
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
 
@@ -565,6 +568,7 @@ function parseQuestion(blocks, i, env, section) {
   const stem = m[2];
   const pre = [];
   let choices = null;
+  let match = null;
   let explanation = null;
   let last = i;
 
@@ -578,16 +582,17 @@ function parseQuestion(blocks, i, env, section) {
     pre.push(rest.join('\n'));
   }
 
-  for (let j = i + 1; j < blocks.length && !choices; j++) {
+  for (let j = i + 1; j < blocks.length && !choices && !match; j++) {
     const b = blocks[j];
     if (b.type === 'fence') { pre.push(b.lines.join('\n')); last = j; continue; }
     const head = b.lines[0];
     if (CHOICE.test(head)) { choices = readChoices(b.lines); last = j; break; }
+    if (isMatchList(b.lines)) { match = readMatch(b.lines); last = j; break; }
     if (QSTART.test(head) || HEADING.test(head) || HR.test(head) || head.startsWith('>') || pre.length >= 4) return null;
     pre.push(b.lines.join('\n'));
     last = j;
   }
-  if (!choices) return null;
+  if (!choices && !match) return null;
 
   const next = blocks[last + 1];
   if (next && next.type === 'text' && next.lines.every((l) => l.startsWith('>'))) {
@@ -596,6 +601,7 @@ function parseQuestion(blocks, i, env, section) {
   }
 
   const id = uniqueId(env, `${section ? section.id : 'question'}-q${num}`);
+  if (match) return { html: renderMatch({ id, num, stem, pre, match, explanation, env, section }), last };
   const letters = choices.map((_, k) => String.fromCharCode(65 + k));
   const correct = choices.map((c, k) => (c.correct ? letters[k] : null)).filter(Boolean);
   const stemHtml = md.renderInline(stem, env);
@@ -631,6 +637,80 @@ ${explanationHtml}
 </details>
 </div>`;
   return { html, last };
+}
+
+// Matching questions: a list of "- **Term:** description" pairs (the ✅ marker
+// is optional). Descriptions are shuffled into a lettered pool; the shuffle is
+// seeded by the question id, so letters stay stable between builds.
+const MATCH_ITEM = /^\s*[-*+]\s+\*\*(.+?)\*\*\s*:?\s*(.*)$/;
+const LIST_MARK = /^\s*[-*+]\s/;
+const isMatchList = (lines) => {
+  const items = lines.filter((l) => LIST_MARK.test(l));
+  return items.length >= 2 && MATCH_ITEM.test(lines[0]) && items.every((l) => MATCH_ITEM.test(l) && !CHOICE.test(l));
+};
+
+function readMatch(lines) {
+  const pairs = [];
+  for (const l of lines) {
+    const m = l.match(MATCH_ITEM);
+    if (m && LIST_MARK.test(l)) pairs.push({ term: m[1].replace(/:\s*$/, '').trim(), desc: m[2].replace(ANSWER_MARK, '').trim() });
+    else if (pairs.length) pairs[pairs.length - 1].desc += ' ' + l.trim();
+  }
+  return pairs;
+}
+
+function seededOrder(n, seed) {
+  let h = 2166136261;
+  for (const ch of seed) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  h = h >>> 0 || 1;
+  const rand = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+  const order = [...Array(n).keys()];
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  if (order.every((v, i) => v === i)) order.push(order.shift()); // never leave it in answer order
+  return order;
+}
+
+function renderMatch({ id, num, stem, pre, match, explanation, env, section }) {
+  const order = seededOrder(match.length, id);
+  const letters = match.map((_, k) => String.fromCharCode(65 + k));
+  const answerOf = match.map((_, i) => letters[order.indexOf(i)]);
+  const stemHtml = md.renderInline(stem, env);
+  const termHtml = match.map((p) => md.renderInline(p.term, env));
+  const descHtml = match.map((p) => md.renderInline(p.desc, env));
+  const explanationHtml = explanation ? md.render(explanation, env) : '';
+
+  env.questions.push({
+    n: num,
+    id,
+    section: section ? section.text : null,
+    sectionId: section ? section.id : null,
+    text: htmlToText(stemHtml),
+    hay: [htmlToText(stemHtml), ...termHtml.map(htmlToText), ...descHtml.map(htmlToText), htmlToText(explanationHtml)].join(' ').replace(/\s+/g, ' '),
+  });
+
+  return `<div class="q q-match" id="${id}">
+<p class="q-num" aria-hidden="true">${num}</p>
+<p class="q-stem"><span class="visually-hidden">Question ${num}: </span>${stemHtml}</p>
+${pre.length ? `<div class="q-extra">${md.render(pre.join('\n\n'), env)}</div>` : ''}
+<ul class="match-terms">
+${match.map((_, i) => `<li class="match-row" data-answer="${answerOf[i]}"><span class="match-term">${termHtml[i]}</span><span class="match-slot"></span></li>`).join('\n')}
+</ul>
+<ol class="match-pool">
+${order.map((src, k) => `<li class="match-option"><span class="bubble" aria-hidden="true">${letters[k]}</span><span class="match-text"><span class="visually-hidden">${letters[k]}. </span>${descHtml[src]}</span></li>`).join('\n')}
+</ol>
+<details class="answer">
+<summary><span class="when-closed">Show answer</span><span class="when-open">Hide answer</span></summary>
+<div class="answer-body">
+<dl class="match-key">
+${match.map((_, i) => `<div><dt>${termHtml[i]}</dt><dd><strong>${answerOf[i]}</strong> ${descHtml[i]}</dd></div>`).join('\n')}
+</dl>
+${explanationHtml}
+</div>
+</details>
+</div>`;
 }
 
 // Choices are usually one line, but may continue on indented lines (for
@@ -781,8 +861,11 @@ function fontFaces(family) {
 }
 const fontStack = (family) => `'${family}', ${FONT_SOURCES[family]?.fallback || 'system-ui, sans-serif'}`;
 
-const readStyle = (name) => fs.readFileSync(path.join(SRC, 'styles', name), 'utf8');
-const readScript = (name) => fs.readFileSync(path.join(SRC, 'scripts', name), 'utf8');
+// Strip a byte-order mark: these files are concatenated, and a BOM mid-file
+// silently breaks the CSS rule that follows it.
+const readSource = (file) => fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '');
+const readStyle = (name) => readSource(path.join(SRC, 'styles', name));
+const readScript = (name) => readSource(path.join(SRC, 'scripts', name));
 
 function subjectThemeCss(subject) {
   const fonts = subject.design?.fonts || {};
@@ -793,7 +876,7 @@ function subjectThemeCss(subject) {
   let css = `${faces}\n${scope}{--f-display:${fontStack(display)};--f-body:${fontStack(body)};}\n`;
   const themeFile = path.join(SRC, 'styles', 'themes', `${subject.slug}.css`);
   if (fs.existsSync(themeFile)) {
-    css += fs.readFileSync(themeFile, 'utf8');
+    css += readSource(themeFile);
   } else {
     // Generated fallback from the palette in _subject.json:
     // [background, ink, accent, highlight, warning, rule]

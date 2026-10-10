@@ -1,0 +1,10 @@
+{
+  "title": "Python Essentials Final Exam",
+  "description": "Final test answers for Python Essentials 1 and 2.",
+  "accent": "#22332E",
+  "design": {
+    "mood": "The last review session on the classroom chalkboard: slate board, chalk text, chalk-yellow key",
+    "palette": ["#22332E", "#EEF0EA", "#F2D06B", "#F2D06B", "#F2A493", "#4A5F57"],
+    "fonts": { "display": "Kalam", "body": "Atkinson Hyperlegible" }
+  }
+}

@@ -1,0 +1,67 @@
+/* DevNet Associate: a patch panel in a network rack.
+   Faceplate grey page, gear-black rack unit for the header, port-shaped
+   answer bubbles, cable-blue highlight on the key, amber for faults. */
+
+[data-subject="devnet"] {
+  --c-bg: #ECEEF0;          /* faceplate */
+  --c-surface: #FFFFFF;
+  --c-ink: #15202B;         /* gear black */
+  --c-muted: #4B5763;
+  --c-rule: #C3CAD2;        /* rail */
+  --c-accent: #0A5F8C;
+  --c-accent-ink: #FFFFFF;
+  --c-accent-soft: #3A4652;
+  --c-link: #0A5F8C;
+  --c-mark: #BDE3F3;        /* cable blue */
+  --c-warn: #9A4A00;        /* fault amber */
+  --c-focus: #0A5F8C;
+  --c-code-inline: #DCE1E6;
+  --c-hover: rgba(10, 95, 140, 0.08);
+  --radius-form: 4px;
+
+  --shiki-background: #FFFFFF;
+  --shiki-foreground: #15202B;
+  --shiki-token-keyword: #0A5F8C;
+  --shiki-token-string: #8A4300;
+  --shiki-token-string-expression: #8A4300;
+  --shiki-token-comment: #5A6672;
+  --shiki-token-constant: #6B3FA0;
+  --shiki-token-function: #1F6B3A;
+  --shiki-token-parameter: #15202B;
+  --shiki-token-punctuation: #3A4652;
+}
+
+[data-subject="devnet"] h1,
+[data-subject="devnet"] .prose h2 { font-weight: 900; letter-spacing: -0.01em; }
+
+/* Hub header: a rack unit, gear black with rack ears on both sides. */
+[data-subject="devnet"] .sheet-head {
+  border: 0;
+  border-left: 12px solid #3A4652;
+  border-right: 12px solid #3A4652;
+  border-radius: 4px;
+  background: #15202B;
+  color: #ECEEF0;
+}
+[data-subject="devnet"] .sheet-title { border-bottom: 1px solid #3A4652; }
+[data-subject="devnet"] .sheet-desc { color: #C9D2DB; }
+[data-subject="devnet"] .sheet-fields > div { border-color: #3A4652; }
+[data-subject="devnet"] .sheet-fields dt { color: #7FD1F5; }
+[data-subject="devnet"] .sheet-fields .fact-sub { color: #9FB0C0; }
+
+/* Module headings: a cable run along the left. */
+[data-subject="devnet"] .prose h2 { padding-left: 0.85rem; border-left: 6px solid var(--c-accent); }
+
+/* Answer bubbles read as ports: squared, with the RJ45 latch notch. */
+[data-subject="devnet"] .bubble { position: relative; border-radius: 3px; }
+[data-subject="devnet"] .bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.28rem;
+  transform: translateX(-50%);
+  background: var(--c-bg);
+}
+[data-subject="devnet"] .topic-num { border-radius: 4px; }

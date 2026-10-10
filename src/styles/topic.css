@@ -1,4 +1,4 @@
-﻿/* Topic page: a readable column, a persistent table of contents on wide
+/* Topic page: a readable column, a persistent table of contents on wide
    screens, and the question pattern. */
 
 .topic {
@@ -217,7 +217,7 @@ figure.code pre code { font: inherit; }
 .choice-input:focus-visible + .bubble { outline: 3px solid var(--c-focus); outline-offset: 2px; }
 .choice-input[type="checkbox"] + .bubble { border-radius: 5px; }
 .choice-input:checked + .bubble { border-color: var(--c-ink); background: var(--c-ink); color: var(--c-bg); }
-.q.is-checked .is-picked:not(.is-correct) .bubble { border-color: var(--c-warn); background: var(--c-warn); color: #FFFFFF; }
+.q.is-checked .is-picked:not(.is-correct) .bubble { border-color: var(--c-warn); background: var(--c-warn); color: var(--c-warn-ink, #FFFFFF); }
 
 .pick-note {
   display: inline-block;
@@ -324,3 +324,43 @@ details[open] > summary .when-closed { display: none; }
 .pager-next { text-align: right; }
 .pager-label { display: block; color: var(--c-muted); font-size: 0.875rem; }
 .pager-title { display: block; font-weight: 700; }
+
+/* Matching questions: terms with a letter slot, then the lettered pool. */
+.match-terms { display: grid; gap: 0.35rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.prose .match-terms li + li, .prose .match-pool li + li { margin-top: 0; }
+.match-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--c-rule);
+  border-radius: 6px;
+  background: var(--c-surface);
+}
+.match-term { font-weight: 700; }
+.match-slot { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.match-select {
+  min-width: 6.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 2px solid var(--c-accent);
+  border-radius: 6px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-weight: 700;
+}
+.match-row.is-match-right { border-color: var(--c-accent); }
+.match-row.is-match-right .match-select { border-color: var(--c-accent); }
+.match-row.is-match-wrong { border: 2px solid var(--c-warn); }
+.match-row.is-match-wrong .match-select { border-color: var(--c-warn); }
+.match-row.is-match-wrong .pick-note { color: var(--c-warn); margin-left: 0; }
+
+.match-pool { display: grid; gap: 0.45rem; margin: 0 0 0.6rem; padding: 0; list-style: none; }
+.match-option { display: grid; grid-template-columns: 1.7rem minmax(0, 1fr); gap: 0.6rem; align-items: start; }
+
+.match-key { margin: 0 0 0.75rem; }
+.match-key > div + div { margin-top: 0.4rem; }
+.match-key dt { font-weight: 700; }
+.match-key dd { margin: 0; }

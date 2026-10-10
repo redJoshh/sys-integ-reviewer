@@ -1,0 +1,57 @@
+/* Python Essentials final exam: the last review session, on the classroom
+   chalkboard. Slate board, chalk text, chalk-yellow key, coral corrections.
+   Kalam (handwriting) is used only for the title, hub header and question
+   numbers; everything read at length stays in the body face. */
+
+[data-subject="pe1-2"] {
+  color-scheme: dark;
+  --c-bg: #22332E;          /* slate board */
+  --c-surface: #2C403A;     /* board edge */
+  --c-ink: #EEF0EA;         /* chalk */
+  --c-muted: #B8C4BE;       /* chalk dust */
+  --c-rule: #4A5F57;
+  --c-accent: #F2D06B;      /* chalk yellow */
+  --c-accent-ink: #22332E;
+  --c-accent-soft: #4A5F57;
+  --c-link: #9CC7E6;
+  --c-mark: #F2D06B;
+  --c-warn: #F2A493;        /* chalk coral */
+  --c-warn-ink: #22332E;
+  --c-focus: #9CC7E6;
+  --c-code-inline: #34493F;
+  --c-hover: rgba(238, 240, 234, 0.07);
+  --radius-form: 6px;
+
+  --shiki-background: #1A2824;
+  --shiki-foreground: #EEF0EA;
+  --shiki-token-keyword: #F2D06B;
+  --shiki-token-string: #F2A493;
+  --shiki-token-string-expression: #F2A493;
+  --shiki-token-comment: #9DAEA6;
+  --shiki-token-constant: #9CC7E6;
+  --shiki-token-function: #C9B6F2;
+  --shiki-token-parameter: #EEF0EA;
+  --shiki-token-punctuation: #C8D2CC;
+}
+
+/* Written on the board: title, hub header and question numbers. */
+[data-subject="pe1-2"] .topic-head h1,
+[data-subject="pe1-2"] .sheet-head h1 {
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+[data-subject="pe1-2"] .q-num { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+
+/* Body-face headings everywhere else, so long lists stay easy to scan. */
+[data-subject="pe1-2"] .topics > h2,
+[data-subject="pe1-2"] .topic-title,
+[data-subject="pe1-2"] .sheet-fields dt,
+[data-subject="pe1-2"] .sheet-fields dd,
+[data-subject="pe1-2"] .bubble { font-family: var(--f-body); }
+[data-subject="pe1-2"] .bubble { font-weight: 700; font-size: 0.8125rem; }
+
+[data-subject="pe1-2"] .sheet-head { border-width: 1px; border-color: var(--c-rule); }
+[data-subject="pe1-2"] .sheet-title { border-bottom: 1px solid var(--c-rule); }
+[data-subject="pe1-2"] .site-header { border-bottom-color: var(--c-rule); }
+[data-subject="pe1-2"] .btn:hover { background: var(--c-bg); }

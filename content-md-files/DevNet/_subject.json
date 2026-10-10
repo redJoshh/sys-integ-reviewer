@@ -1,0 +1,10 @@
+{
+  "title": "DevNet Associate",
+  "description": "Test answers for Modules 1 to 3 of DevNet Associate (Version 1.0), with explanations.",
+  "accent": "#0A5F8C",
+  "design": {
+    "mood": "Patch panel in a network rack: faceplate grey, gear black, port-shaped bubbles, cable-blue highlight",
+    "palette": ["#ECEEF0", "#15202B", "#0A5F8C", "#BDE3F3", "#9A4A00", "#C3CAD2"],
+    "fonts": { "display": "Red Hat Display", "body": "Atkinson Hyperlegible" }
+  }
+}
