@@ -1,0 +1,35 @@
+/* Python Essentials 1: a machine-graded answer sheet.
+   Form-green ink for structure, graphite for marks, highlighter for the key. */
+
+[data-subject="pe1"] {
+  --c-bg: #F3F6F4;          /* sheet */
+  --c-surface: #FFFFFF;
+  --c-ink: #24272B;         /* graphite */
+  --c-muted: #4E5A55;
+  --c-rule: #C9D6CF;        /* grid */
+  --c-accent: #1D6B57;      /* form green */
+  --c-accent-ink: #FFFFFF;
+  --c-accent-soft: #A9C9BC;
+  --c-link: #1D6B57;
+  --c-mark: #F6D55C;        /* highlighter */
+  --c-warn: #A63D33;        /* eraser */
+  --c-focus: #1D6B57;
+  --c-code-inline: #E1EAE5;
+  --radius-form: 12px;
+
+  --shiki-background: #FFFFFF;
+  --shiki-foreground: #24272B;
+  --shiki-token-keyword: #1D6B57;
+  --shiki-token-string: #8A3B12;
+  --shiki-token-string-expression: #8A3B12;
+  --shiki-token-comment: #5B6661;
+  --shiki-token-constant: #1F4F8F;
+  --shiki-token-function: #6B2E7A;
+  --shiki-token-parameter: #24272B;
+  --shiki-token-punctuation: #3C4642;
+}
+
+[data-subject="pe1"] .prose h2 {
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--c-accent);
+}

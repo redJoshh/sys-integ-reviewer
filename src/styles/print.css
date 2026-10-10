@@ -1,0 +1,53 @@
+/* Print: an ink-friendly answer key. No navigation, no backgrounds, every
+   answer visible. */
+
+@page { margin: 14mm 16mm; }
+
+html, body { background: #fff !important; color: #000 !important; }
+body { display: block; font-size: 10.5pt; line-height: 1.45; }
+
+.skip, .site-header, .site-footer, .toc, .toolbar, .topic-end, .copy, .topic-place { display: none !important; }
+
+.topic { max-width: none; padding: 0; }
+.topic-layout { display: block !important; margin-top: 1rem; }
+.prose > *, .topic-head { max-width: none; }
+
+a { color: #000 !important; text-decoration: none; }
+.topic-head .topic-summary, .topic-meta { color: #000; }
+
+.prose h2 { margin: 1.5rem 0 0.75rem; break-after: avoid; }
+.prose hr { display: none; }
+
+figure.code pre {
+  background: #fff !important;
+  border: 1px solid #777;
+  white-space: pre-wrap;
+  overflow: visible;
+  font-size: 9pt;
+}
+
+.q { break-inside: avoid; margin-bottom: 1rem; }
+.q-num, .bubble, .answer summary { color: #000 !important; }
+.bubble { border-color: #000 !important; }
+
+/* Show every answer. JS also opens the details before printing. */
+.answer summary { display: none; }
+.answer::details-content { content-visibility: visible; display: block; }
+.answer-body { border-left: 2px solid #000; margin-top: 0.25rem; }
+
+.is-correct .bubble {
+  background: #000 !important;
+  color: #fff !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.is-correct .hl { background: none !important; font-weight: 700; text-decoration: underline; }
+
+/* Exam mode is screen-only: print the clean key, not the student's picks. */
+.q-controls, .scorebar, .pick-note { display: none !important; }
+.choice-input:checked + .bubble,
+.q.is-checked .is-picked:not(.is-correct) .bubble { background: none !important; color: #000 !important; border-color: #000 !important; }
+.is-correct .choice-input + .bubble { background: #000 !important; color: #fff !important; }
+
+.callout, .selftest { background: none !important; border: 1px solid #000; }
+.callout-exam { border-width: 2px; }

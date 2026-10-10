@@ -1,0 +1,10 @@
+{
+  "title": "Python Essentials 1",
+  "description": "Test answers for Modules 1 to 4 and the Part 1 summary test, with explanations where the notes include them.",
+  "accent": "#1D6B57",
+  "design": {
+    "mood": "Machine-graded answer sheet: form-green ink, graphite bubbles, highlighter on the key",
+    "palette": ["#F3F6F4", "#24272B", "#1D6B57", "#F6D55C", "#A63D33", "#C9D6CF"],
+    "fonts": { "display": "Barlow Condensed", "body": "Atkinson Hyperlegible" }
+  }
+}

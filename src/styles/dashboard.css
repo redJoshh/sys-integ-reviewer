@@ -1,0 +1,129 @@
+/* Dashboard (/) and 404. The site's own identity: a plain index of subjects,
+   each row carrying its subject's accent as a spine. */
+
+.dash {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 4rem) var(--gutter) 0;
+}
+
+.dash h1 {
+  margin: 0 0 0.6rem;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  max-width: 48ch;
+  margin: 0 0 2rem;
+  color: var(--c-muted);
+  font-size: 1.125rem;
+}
+
+/* Search */
+.search label { display: block; margin-bottom: 0.35rem; font-weight: 700; }
+.search input {
+  width: 100%;
+  max-width: 34rem;
+  padding: 0.7rem 0.85rem;
+  border: 2px solid var(--c-ink);
+  border-radius: 4px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+}
+.search input::placeholder { color: var(--c-muted); opacity: 1; }
+.search-status { min-height: 1.5em; margin: 0.4rem 0 0; color: var(--c-muted); font-size: 0.9375rem; }
+
+.search-results {
+  max-width: 44rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--c-rule);
+}
+.search-results li { border-bottom: 1px solid var(--c-rule); }
+.search-results a {
+  display: block;
+  padding: 0.7rem 0;
+  color: var(--c-ink);
+  text-decoration: none;
+}
+.search-results a:hover .result-title,
+.search-results a:focus-visible .result-title { text-decoration: underline; }
+.result-title { display: block; font-weight: 700; }
+.result-where { display: block; color: var(--c-muted); font-size: 0.875rem; }
+.search-results mark { background: var(--c-mark); color: inherit; padding: 0 0.1em; }
+
+/* Continue where you left off */
+.continue {
+  margin: 2.5rem 0 0;
+  padding: 1.1rem 1.35rem 1.2rem;
+  max-width: 44rem;
+  border-radius: 8px;
+  background: var(--c-ink);
+  color: var(--c-bg);
+}
+.continue h2 { margin: 0 0 0.2rem; font-size: 1rem; font-weight: 400; }
+.continue a {
+  color: inherit;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+.continue a:focus-visible { outline-color: var(--c-bg); }
+.continue p { margin: 0.25rem 0 0; font-size: 0.9375rem; opacity: 0.85; }
+
+/* Subjects */
+.subject-list > h2 {
+  margin: 3.5rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-muted);
+}
+
+.subjects { margin: 1rem 0 0; padding: 0; list-style: none; }
+
+.subject-row {
+  padding: 0.35rem 0 0.5rem 1.4rem;
+  border-left: 6px solid var(--spine, var(--c-accent));
+}
+.subject-row + .subject-row { margin-top: 2.75rem; }
+
+.subject-name {
+  margin: 0;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(2.1rem, 7vw, 4rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+.subject-name a { color: var(--c-ink); text-decoration: none; }
+.subject-name a:hover { text-decoration: underline; text-decoration-thickness: 0.06em; }
+
+.subject-desc { max-width: 52ch; margin: 0.75rem 0 0; color: var(--c-muted); }
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2.25rem;
+  margin: 1rem 0 0;
+}
+.facts div { display: flex; flex-direction: column; }
+.facts dt { color: var(--c-muted); font-size: 0.875rem; }
+.facts dd { margin: 0; font-weight: 700; font-size: 1.125rem; }
+
+.meter {
+  max-width: 22rem;
+  height: 6px;
+  margin-top: 0.9rem;
+  border-radius: 3px;
+  background: var(--c-rule);
+  overflow: hidden;
+}
+.meter span { display: block; height: 100%; width: var(--done, 0%); background: var(--spine, var(--c-accent)); }
+.fact-sub { display: block; font-family: var(--f-body); font-size: 0.875rem; font-weight: 400; line-height: 1.35; color: var(--c-muted); }

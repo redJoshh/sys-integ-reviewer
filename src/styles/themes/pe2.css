@@ -1,0 +1,49 @@
+/* Python Essentials 2: a library card catalog.
+   Index cards (white, red header rule, blue ruling) filed in a blue-grey drawer. */
+
+[data-subject="pe2"] {
+  --c-bg: #E6EBF2;          /* drawer */
+  --c-surface: #FFFFFF;     /* card */
+  --c-ink: #1C2533;
+  --c-muted: #4A5568;
+  --c-rule: #B9C4D4;        /* blue ruling */
+  --c-accent: #3557A6;      /* rule blue */
+  --c-accent-ink: #FFFFFF;
+  --c-accent-soft: #C9D4E8;
+  --c-link: #2D4C93;
+  --c-mark: #C3EBC9;        /* key green */
+  --c-warn: #B4322B;        /* header red */
+  --c-focus: #B4322B;
+  --c-code-inline: #D6DEEA;
+  --c-hover: rgba(53, 87, 166, 0.09);
+  --radius-form: 4px;
+
+  --shiki-background: #FFFFFF;
+  --shiki-foreground: #1C2533;
+  --shiki-token-keyword: #2D4C93;
+  --shiki-token-string: #8C2A24;
+  --shiki-token-string-expression: #8C2A24;
+  --shiki-token-comment: #5A6474;
+  --shiki-token-constant: #6A3D8F;
+  --shiki-token-function: #1F6157;
+  --shiki-token-parameter: #1C2533;
+  --shiki-token-punctuation: #3A4556;
+}
+
+/* The hub header is the catalog card: red rule under the title, blue ruling
+   between the fields. */
+[data-subject="pe2"] .sheet-head {
+  border: 1px solid var(--c-rule);
+  box-shadow: 0 1px 0 var(--c-rule);
+}
+[data-subject="pe2"] .sheet-title { border-bottom: 3px double var(--c-warn); }
+[data-subject="pe2"] .sheet-fields dt { color: var(--c-muted); }
+[data-subject="pe2"] .sheet-fields > div { border-color: var(--c-rule); }
+
+/* Module headings sit on the card's red header rule. */
+[data-subject="pe2"] .prose h2 {
+  padding-bottom: 0.45rem;
+  border-bottom: 3px double var(--c-warn);
+}
+
+[data-subject="pe2"] .q-num { color: var(--c-warn); }

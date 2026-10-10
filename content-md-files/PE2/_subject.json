@@ -1,0 +1,10 @@
+{
+  "title": "Python Essentials 2",
+  "description": "Test answers for Modules 1 to 4 and the Part 2 summary test.",
+  "accent": "#3557A6",
+  "design": {
+    "mood": "Library card catalog: index cards with a red header rule and blue ruling, filed in a blue-grey drawer",
+    "palette": ["#E6EBF2", "#1C2533", "#3557A6", "#C3EBC9", "#B4322B", "#B9C4D4"],
+    "fonts": { "display": "Zilla Slab", "body": "Atkinson Hyperlegible" }
+  }
+}
