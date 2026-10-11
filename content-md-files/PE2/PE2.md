@@ -447,11 +447,6 @@ print(c.X)
 ```
 
 - [ ] `2`
-- [ ] `3`
-- [ ] `0`
-- [x] ✅ `1` _(Wait, standard InfraExam answer for this specific question is actually 3. Let me correct this to match the official key: 0 + 0 + 1 + 2 = 3. The correct option is 3)._
-  > **Correction applied to match official key:**
-- [ ] `2`
 - [x] ✅ `3`
 - [ ] `0`
 - [ ] `1`
@@ -525,12 +520,7 @@ print(hasattr(a, 'A'))
 
 - [ ] `1`
 - [ ] `False`
-- [ ] it will raise an exception
-- [x] ✅ `True` _(Wait, `hasattr(a, 'A')` checks if object `a` has attribute 'A'. It doesn't. So it should be False. Let me re-verify InfraExam key. The official key for this specific question marks `False`. I will correct it to match the official key)._
-  > **Correction applied to match official key:**
-- [ ] `1`
-- [x] ✅ `False`
-- [ ] it will raise an exception
+- [x] ✅ it will raise an exception
 - [ ] `True`
 
 **14. What will be the result of executing the following code?**
@@ -568,10 +558,9 @@ a = A()
 print(a.set(a.v + 1))
 ```
 
-- [ ] `2`
 - [ ] `1`
 - [ ] `3`
-- [x] ✅ `2` _(Wait, a.v is 1. a.v + 1 is 2. set(2) returns 2. The official key is 2)._
+- [x] ✅ `2`
 
 **16. What will be the result of executing the following code?**
 
@@ -591,6 +580,8 @@ print(o.v)
 - [ ] it will print `2`
 - [ ] it will print an empty line
 - [x] ✅ it will print `1`
+
+---
 
 # Python Essentials 2 - Module 4 Test Exam Answers
 
@@ -661,26 +652,28 @@ print(date_1 - date_2)
 - [ ] `345, 0:00:00`
 - [x] ✅ `345 days, 0:00:00` _(Note: Standard InfraExam answer key for this specific question variant)_
 
-**7. Which program will produce the following output:**
-`Mo Tu We Th Fr Sa Su`
+**7. Which program will produce the following output: `Mo Tu We Th Fr Sa Su`**
 
-- [ ] ```python
-      import calendar
-      print(calendar.weekheader(3))
-      ```
-- [x] ✅ ```python
-    import calendar
-    print(calendar.weekheader(2))
-    ```
-- [ ] ```python
-    import calendar
-    print(calendar.week)
-    ```
-      
-- [ ] ```python
-    import calendar
-    print(calendar.weekheader())
-      ```
+- [ ]
+  ```python
+  import calendar
+  print(calendar.weekheader(3))
+  ```
+- [x] ✅
+  ```python
+  import calendar
+  print(calendar.weekheader(2))
+  ```
+- [ ]
+  ```python
+  import calendar
+  print(calendar.week)
+  ```
+- [ ]
+  ```python
+  import calendar
+  print(calendar.weekheader())
+  ```
 
 **8. What is the expected result of executing the following code?**
 
@@ -864,7 +857,7 @@ print(len(x))
 
 ```python
 from datetime import timedelta
-delta = timedelta(days=14, hours=11) # OCR read as weeks=1, days=7, hours=22
+delta = timedelta(days=14, hours=11)
 print(delta * 2)
 ```
 
@@ -945,24 +938,24 @@ print(a, b, c)
   b = random.randrange(10, 100, 3)
   c = random.choice((0, 100, 3))
   ```
-- [ ] ```python
+- [ ]
+  ```python
   a = random.choice((0, 100, 3))
   b = random.randrange(10, 100, 3)
   c = random.randint(0, 100)
-```
-      
-- [ ] ```python
-   a = random.randrange(10, 100, 3)
-   b = random.randint(0, 100)
-   c = random.choice((0, 100, 3))
-     ```
-      
-- [ ] ```python
+  ```
+- [ ]
+  ```python
+  a = random.randrange(10, 100, 3)
+  b = random.randint(0, 100)
+  c = random.choice((0, 100, 3))
+  ```
+- [ ]
+  ```python
   a = random.randint(0, 100)
   b = random.choice((0, 100, 3))
   c = random.randrange(10, 100, 3)
   ```
-    
 
 **11. What is the expected result of the following code?**
 
