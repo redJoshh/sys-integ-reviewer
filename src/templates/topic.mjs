@@ -1,6 +1,6 @@
 // Topic page (/<subject>/<topic>/): the reviewer content itself.
 
-import { esc, layout, minutes, plural } from './layout.mjs';
+import { esc, href, layout, minutes, plural } from './layout.mjs';
 
 const WEIGHT_LABEL = { low: 'Exam weight: low', medium: 'Exam weight: medium', high: 'Exam weight: high' };
 
@@ -25,7 +25,7 @@ export function renderTopic({ site, assets }, s, t) {
 
   const main = `<main id="main" class="topic" tabindex="-1" data-topic data-topic-url="${esc(t.url)}" data-topic-title="${esc(t.title)}" data-subject-title="${esc(s.title)}">
 <header class="topic-head">
-<p class="topic-place">Topic ${t.index} of ${s.ordered.length} in <a href="${s.url}">${esc(s.title)}</a></p>
+<p class="topic-place">Topic ${t.index} of ${s.ordered.length} in <a href="${href(s.url)}">${esc(s.title)}</a></p>
 <h1>${esc(t.title)}</h1>
 ${t.summary ? `<p class="topic-summary">${esc(t.summary)}</p>` : ''}
 <p class="topic-meta">${meta.map((m) => `<span>${esc(m)}</span>`).join('')}${t.examWeight ? `<span class="weight weight-${t.examWeight}">${WEIGHT_LABEL[t.examWeight]}</span>` : ''}</p>
@@ -56,9 +56,9 @@ ${tocList(toc)}
 <noscript><p>Turn on JavaScript to track which topics you have reviewed.</p></noscript>
 </div>
 <nav class="pager" aria-label="Topics in ${esc(s.title)}">
-${t.prev ? `<a class="pager-prev" href="${t.prev.url}" rel="prev"><span class="pager-label">Previous topic</span><span class="pager-title">${esc(t.prev.title)}</span></a>` : ''}
-${t.next ? `<a class="pager-next" href="${t.next.url}" rel="next"><span class="pager-label">Next topic</span><span class="pager-title">${esc(t.next.title)}</span></a>` : ''}
-<a class="pager-hub" href="${s.url}"><span class="pager-label">All topics in</span><span class="pager-title">${esc(s.title)}</span></a>
+${t.prev ? `<a class="pager-prev" href="${href(t.prev.url)}" rel="prev"><span class="pager-label">Previous topic</span><span class="pager-title">${esc(t.prev.title)}</span></a>` : ''}
+${t.next ? `<a class="pager-next" href="${href(t.next.url)}" rel="next"><span class="pager-label">Next topic</span><span class="pager-title">${esc(t.next.title)}</span></a>` : ''}
+<a class="pager-hub" href="${href(s.url)}"><span class="pager-label">All topics in</span><span class="pager-title">${esc(s.title)}</span></a>
 </nav>
 </footer>
 </main>`;

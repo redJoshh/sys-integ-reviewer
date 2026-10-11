@@ -121,7 +121,8 @@
   const cont = document.querySelector('[data-continue]');
   if (cont && data.last && data.last.url) {
     const link = cont.querySelector('[data-continue-link]');
-    link.href = data.last.url;
+    // Saved URLs are site-relative; the site may live under a folder.
+    link.href = (document.documentElement.dataset.base || '') + data.last.url;
     link.textContent = data.last.title;
     const reviewed = data.reviewed[data.last.url] ? 'You marked it as reviewed.' : 'Not marked as reviewed yet.';
     cont.querySelector('[data-continue-meta]').textContent = `${data.last.subject}. ${reviewed}`;

@@ -1,12 +1,12 @@
 // Root dashboard (/) and the 404 page, which shares its look.
 
-import { esc, layout, minutes, plural, quizData } from './layout.mjs';
+import { esc, href, layout, minutes, plural, quizData } from './layout.mjs';
 
 function subjectRows(subjects, headingLevel) {
   const h = `h${headingLevel}`;
   return `<ul class="subjects">
 ${subjects.map((s) => `<li class="subject-row"${s.accent ? ` style="--spine:${esc(s.accent)}"` : ''}>
-<${h} class="subject-name"><a href="${s.url}">${esc(s.title)}</a></${h}>
+<${h} class="subject-name"><a href="${href(s.url)}">${esc(s.title)}</a></${h}>
 <p class="subject-desc">${esc(s.description)}</p>
 <dl class="facts">
 <div><dt>Topics</dt><dd>${s.ordered.length}</dd></div>
@@ -35,7 +35,7 @@ export function renderDashboard({ site, subjects, assets }) {
 <ol class="search-results" data-search-results hidden></ol>
 <section class="continue" data-continue hidden aria-labelledby="continue-heading">
 <h2 id="continue-heading">Continue where you left off</h2>
-<a data-continue-link href="/"></a>
+<a data-continue-link href="${href('/')}"></a>
 <p data-continue-meta></p>
 </section>
 ${subjects.length ? `<section class="subject-list" aria-labelledby="subjects-heading">
@@ -59,7 +59,7 @@ export function renderNotFound({ site, subjects, assets }) {
   const main = `<main id="main" class="dash" tabindex="-1">
 <div class="dash-intro">
 <h1>This page does not exist</h1>
-<p class="lede">The link may be out of date, or the topic was renamed. Pick a subject below, or go to <a href="/">all subjects</a>.</p>
+<p class="lede">The link may be out of date, or the topic was renamed. Pick a subject below, or go to <a href="${href('/')}">all subjects</a>.</p>
 </div>
 ${subjects.length ? `<section class="subject-list" aria-labelledby="subjects-heading">
 <h2 id="subjects-heading">Subjects</h2>

@@ -7,6 +7,8 @@
   const status = form.querySelector('[data-search-status]');
   const list = document.querySelector('[data-search-results]');
   const MAX = 25;
+  // The site may live under a folder (GitHub Pages project sites).
+  const BASE = document.documentElement.dataset.base || '';
   let index = null;
   let loading = null;
 
@@ -14,7 +16,7 @@
   form.addEventListener('submit', (e) => e.preventDefault());
 
   const load = () => {
-    loading = loading || fetch('/search-index.json')
+    loading = loading || fetch(`${BASE}/search-index.json`)
       .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then((d) => { index = d; })
       .catch(() => { status.textContent = 'Search could not load. Browse the subjects below instead.'; });
@@ -55,7 +57,7 @@
     for (const r of shown) {
       const li = document.createElement('li');
       const a = document.createElement('a');
-      a.href = r.url;
+      a.href = BASE + r.url;
       const title = document.createElement('span');
       title.className = 'result-title';
       highlight(title, r.title, pattern);

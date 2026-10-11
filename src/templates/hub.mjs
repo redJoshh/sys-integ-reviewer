@@ -1,6 +1,6 @@
 // Subject hub (/<subject>/): topics in study order, grouped by category.
 
-import { esc, layout, minutes, plural, quizData } from './layout.mjs';
+import { esc, href, layout, minutes, plural, quizData } from './layout.mjs';
 
 const WEIGHT_LABEL = { low: 'Exam weight: low', medium: 'Exam weight: medium', high: 'Exam weight: high' };
 
@@ -8,7 +8,7 @@ function topicItem(t) {
   return `<li class="topic-item" data-topic-item data-topic-url="${esc(t.url)}">
 <span class="topic-num" aria-hidden="true">${t.index}</span>
 <div class="topic-body">
-<a class="topic-title" href="${t.url}">${esc(t.title)}</a>
+<a class="topic-title" href="${href(t.url)}">${esc(t.title)}</a>
 ${t.summary ? `<p class="topic-summary">${esc(t.summary)}</p>` : ''}
 <p class="topic-meta">
 <span>${minutes(t.minutes)} read</span>

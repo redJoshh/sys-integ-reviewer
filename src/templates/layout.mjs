@@ -1,5 +1,14 @@
 // Shared page shell and small helpers used by every template.
 
+// Where the site lives on its domain: '' on Netlify and Vercel, '/repo-name'
+// on a GitHub Pages project site. Page URLs in the model stay root-relative
+// ('/pe2/pe2/') because they also key saved progress; the base is added only
+// when a link is written.
+let BASE = '';
+export const setBase = (base) => { BASE = base; };
+export const getBase = () => BASE;
+export const href = (url) => (typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') ? BASE + url : url);
+
 const ENTITIES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ENTITIES[c]);
 
@@ -42,14 +51,14 @@ export function minutes(n) {
 
 function breadcrumbs(crumbs) {
   return `<nav class="crumbs" aria-label="Breadcrumb"><ol>${crumbs
-    .map((c) => (c.href ? `<li><a href="${esc(c.href)}">${esc(c.label)}</a></li>` : `<li aria-current="page">${esc(c.label)}</li>`))
+    .map((c) => (c.href ? `<li><a href="${esc(href(c.href))}">${esc(c.label)}</a></li>` : `<li aria-current="page">${esc(c.label)}</li>`))
     .join('')}</ol></nav>`;
 }
 
 export function layout({ site, title, description, url, ogType = 'website', subject = null, styles = [], printStyles = [], scripts = [], crumbs = [], themeColor = '#F5F6F8', main }) {
   const canonical = site.url + url;
   return `<!doctype html>
-<html lang="en"${subject ? ` data-subject="${esc(subject)}"` : ''}>
+<html lang="en" data-base="${esc(BASE)}"${subject ? ` data-subject="${esc(subject)}"` : ''}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -62,7 +71,7 @@ export function layout({ site, title, description, url, ogType = 'website', subj
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(canonical)}">
 <meta name="theme-color" content="${esc(themeColor)}">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="${href('/favicon.svg')}" type="image/svg+xml">
 ${styles.filter(Boolean).map((h) => `<link rel="stylesheet" href="${h}">`).join('\n')}
 ${printStyles.map((h) => `<link rel="stylesheet" href="${h}" media="print">`).join('\n')}
 ${scripts.map((h) => `<script src="${h}" defer></script>`).join('\n')}
@@ -70,7 +79,7 @@ ${scripts.map((h) => `<script src="${h}" defer></script>`).join('\n')}
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
-<a class="brand" href="/"${url === '/' ? ' aria-current="page"' : ''}>${esc(site.name)}</a>
+<a class="brand" href="${href('/')}"${url === '/' ? ' aria-current="page"' : ''}>${esc(site.name)}</a>
 ${crumbs.length ? breadcrumbs(crumbs) : ''}
 </header>
 ${main}

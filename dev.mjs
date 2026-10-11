@@ -1,5 +1,7 @@
 // `npm run dev`: build, serve dist/ on http://localhost:3000, and rebuild when
 // content-md-files/ or src/ changes.
+// `npm run preview:pages` does the same under /<repo>/, the way a GitHub Pages
+// project site serves it, to catch links that ignore the base path.
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -10,6 +12,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(ROOT, 'dist');
 let port = Number(process.env.PORT) || 3000;
+const baseArg = process.argv.find((a) => a.startsWith('--base='));
+const BASE = (baseArg ? baseArg.slice(7) : process.env.BASE_PATH || '').trim().replace(/\/+$/, '').replace(/^(?=[^/])/, '/');
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -34,7 +38,7 @@ function rebuild() {
   running = true;
   const child = spawn(process.execPath, [path.join(ROOT, 'build.mjs')], {
     stdio: 'inherit',
-    env: { ...process.env, SITE_URL: `http://localhost:${port}` },
+    env: { ...process.env, BASE_PATH: BASE, SITE_URL: `http://localhost:${port}${BASE}` },
   });
   child.on('exit', () => {
     running = false;
@@ -50,10 +54,16 @@ function send(res, status, file) {
 const server = http.createServer((req, res) => {
   let urlPath;
   try { urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); } catch { res.writeHead(400).end(); return; }
+  if (BASE) {
+    // Only answer under the base folder, like GitHub Pages does.
+    if (urlPath === '/' || urlPath === BASE) { res.writeHead(302, { Location: `${BASE}/` }).end(); return; }
+    if (!urlPath.startsWith(`${BASE}/`)) { res.writeHead(404, { 'Content-Type': 'text/plain' }).end(`Not found. This preview serves the site under ${BASE}/.`); return; }
+    urlPath = urlPath.slice(BASE.length);
+  }
   let file = path.join(DIST, urlPath);
   if (file !== DIST && !file.startsWith(DIST + path.sep)) { res.writeHead(403).end(); return; }
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {
-    if (!urlPath.endsWith('/')) { res.writeHead(301, { Location: `${urlPath}/` }).end(); return; }
+    if (!urlPath.endsWith('/')) { res.writeHead(301, { Location: `${BASE}${urlPath}/` }).end(); return; }
     file = path.join(file, 'index.html');
   }
   if (fs.existsSync(file)) return send(res, 200, file);
@@ -74,7 +84,7 @@ server.on('error', (e) => {
   }
 });
 server.on('listening', () => {
-  console.log(`Serving dist/ at http://localhost:${port}  (press Ctrl+C to stop)`);
+  console.log(`Serving dist/ at http://localhost:${port}${BASE}/  (press Ctrl+C to stop)`);
   rebuild();
 });
 server.listen(port);

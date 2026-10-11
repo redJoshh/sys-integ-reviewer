@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import MarkdownIt from 'markdown-it';
 import { createHighlighter, createCssVariablesTheme, bundledLanguages } from 'shiki';
-import { esc, htmlToText, slugify } from './src/templates/layout.mjs';
+import { esc, href, htmlToText, setBase, slugify } from './src/templates/layout.mjs';
 import { renderDashboard, renderNotFound } from './src/templates/dashboard.mjs';
 import { renderHub } from './src/templates/hub.mjs';
 import { renderTopic } from './src/templates/topic.mjs';
@@ -21,9 +21,18 @@ const DIST = path.join(ROOT, 'dist');
 const SRC = path.join(ROOT, 'src');
 const require = createRequire(import.meta.url);
 
+// Hosting. BASE_PATH is the folder the site is served from: empty on Netlify
+// and Vercel, "/<repo>" on a GitHub Pages project site. The public URL comes
+// from SITE_URL, or from what Netlify (URL) and Vercel (VERCEL_*) provide.
+const BASE = (process.env.BASE_PATH || '').trim().replace(/\/+$/, '').replace(/^(?=[^/])/, '/');
+setBase(BASE);
+const vercelHost = process.env.VERCEL_ENV === 'production' ? process.env.VERCEL_PROJECT_PRODUCTION_URL : process.env.VERCEL_URL;
+let origin = (process.env.SITE_URL || process.env.URL || (vercelHost ? `https://${vercelHost}` : `http://localhost:${process.env.PORT || 3000}`)).replace(/\/+$/, '');
+if (BASE && !origin.endsWith(BASE)) origin += BASE;
+
 const SITE = {
   name: 'Reviewer',
-  url: (process.env.URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),
+  url: origin, // public URL including BASE_PATH; canonical = url + page path
   builtOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
   fonts: { display: 'Bricolage Grotesque', body: 'Atkinson Hyperlegible' },
 };
@@ -372,36 +381,37 @@ function uniqueId(env, base) {
 
 // Resolve relative links and images against the Markdown file, copy local
 // files into dist, and rewrite .md links to topic URLs.
-function resolveLocal(href, env, kind) {
-  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('#') || href.startsWith('/') || href.startsWith('//')) return href;
-  const [rawPath, hash] = href.split('#');
+function resolveLocal(link, env, kind) {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(link) || link.startsWith('#') || link.startsWith('//')) return link;
+  if (link.startsWith('/')) return href(link); // site-root link written in the notes
+  const [rawPath, hash] = link.split('#');
   let decoded;
   try { decoded = decodeURI(rawPath); } catch { decoded = rawPath; }
   const abs = path.resolve(path.dirname(env.topic.file), decoded);
   if (abs.toLowerCase().endsWith('.md')) {
     const target = topicsByFile.get(abs);
     if (!target) {
-      warn(`${env.rel}: link to "${href}" does not match any topic. Check the file name.`);
-      return href;
+      warn(`${env.rel}: link to "${link}" does not match any topic. Check the file name.`);
+      return link;
     }
-    return target.url + (hash ? `#${hash}` : '');
+    return href(target.url) + (hash ? `#${hash}` : '');
   }
   if (!fs.existsSync(abs)) {
-    warn(`${env.rel}: ${kind.toLowerCase()} "${href}" does not exist (looked for ${rel(abs)}).`);
-    return href;
+    warn(`${env.rel}: ${kind.toLowerCase()} "${link}" does not exist (looked for ${rel(abs)}).`);
+    return link;
   }
   const subjectDir = env.topic.subject.dir;
   const inside = path.relative(subjectDir, abs);
   if (inside.startsWith('..') || path.isAbsolute(inside)) {
-    warn(`${env.rel}: ${kind.toLowerCase()} "${href}" is outside the subject folder, so it was not copied. Move it into ${rel(subjectDir)}/assets/.`);
-    return href;
+    warn(`${env.rel}: ${kind.toLowerCase()} "${link}" is outside the subject folder, so it was not copied. Move it into ${rel(subjectDir)}/assets/.`);
+    return link;
   }
   const parts = inside.split(path.sep);
   const cat = env.topic.subject.categories.get(path.join(subjectDir, parts[0]));
   if (cat && parts.length > 1) parts[0] = cat.slug;
   const outRel = path.join(env.topic.subject.slug, ...parts);
   filesToCopy.set(path.join(DIST, outRel), abs);
-  return '/' + outRel.split(path.sep).map(encodeURIComponent).join('/') + (hash ? `#${hash}` : '');
+  return href('/' + outRel.split(path.sep).map(encodeURIComponent).join('/')) + (hash ? `#${hash}` : '');
 }
 
 // --- Pre-pass on the Markdown source: question blocks, Q:/A: self-tests,
@@ -996,7 +1006,7 @@ function writeAsset(name, content) {
   const file = path.join(DIST, 'assets', dir, out);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, content);
-  return `/assets/${dir === '.' ? '' : dir + '/'}${out}`;
+  return href(`/assets/${dir === '.' ? '' : dir + '/'}${out}`);
 }
 
 const fontFaceCache = new Map();
@@ -1128,7 +1138,7 @@ async function main() {
     const version = require('katex/package.json').version;
     fs.cpSync(path.join(kdir, 'fonts'), path.join(DIST, 'assets', `katex-${version}`, 'fonts'), { recursive: true });
     fs.copyFileSync(path.join(kdir, 'katex.min.css'), path.join(DIST, 'assets', `katex-${version}`, 'katex.min.css'));
-    assets.katex = `/assets/katex-${version}/katex.min.css`;
+    assets.katex = href(`/assets/katex-${version}/katex.min.css`);
   }
 
   const ctx = { site: SITE, subjects, assets };
