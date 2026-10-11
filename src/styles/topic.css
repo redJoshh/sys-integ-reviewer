@@ -166,6 +166,11 @@ figure.code pre code { font: inherit; }
 }
 .q-stem { grid-row: 1; margin: 0 0 0.75rem; font-weight: 700; }
 .q-extra > :last-child { margin-bottom: 0.75rem; }
+/* Long fill-in blanks ("____________") must wrap on narrow screens. */
+.q-stem code, .q-extra p code { overflow-wrap: anywhere; }
+/* Open questions: the key is the answer itself, not a letter. */
+.answer-open ul { margin: 0; padding-left: 1.1rem; }
+.answer-open li + li { margin-top: 0.2rem; }
 
 .choices { display: grid; gap: 0.45rem; margin: 0 0 0.6rem; padding: 0; list-style: none; }
 .prose .choices li + li { margin-top: 0; }

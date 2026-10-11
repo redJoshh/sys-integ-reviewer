@@ -1,0 +1,10 @@
+{
+  "title": "ITELEC3C",
+  "description": "Laravel review for Modules 1 to 6: routing, Blade, middleware, migrations, Eloquent, and form validation, with choice, fill-in, code completion, and output questions.",
+  "accent": "#C4261C",
+  "design": {
+    "mood": "Kitchen order ticket on the pass, from the notes' restaurant analogy: white tickets, Laravel-red header strip, steel ticket rail",
+    "palette": ["#E7EAEC", "#18191B", "#C4261C", "#FBD5CF", "#8A5A00", "#C5CBCF"],
+    "fonts": { "display": "Oswald", "body": "Atkinson Hyperlegible" }
+  }
+}

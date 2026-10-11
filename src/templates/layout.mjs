@@ -27,7 +27,9 @@ export function slugify(s) {
 }
 
 // Data the browser needs to total saved exam answers: topic URL and question count.
-export const quizData = (topics) => JSON.stringify(topics.filter((t) => t.questions.length).map((t) => ({ url: t.url, total: t.questions.length })));
+// Only questions with choices can be graded; open questions just reveal a key.
+const graded = (t) => t.questions.filter((q) => !q.open).length;
+export const quizData = (topics) => JSON.stringify(topics.filter(graded).map((t) => ({ url: t.url, total: graded(t) })));
 
 export const plural = (n, word, many = `${word}s`) => `${n} ${n === 1 ? word : many}`;
 

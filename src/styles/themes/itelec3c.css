@@ -1,0 +1,71 @@
+/* ITELEC3C (Laravel): a kitchen order ticket on the pass, from the notes'
+   own restaurant analogy. White tickets with a Laravel-red header strip,
+   a steel ticket rail for each part of the exam. */
+
+[data-subject="itelec3c"] {
+  --c-bg: #E7EAEC;          /* pass steel */
+  --c-surface: #FFFFFF;     /* ticket */
+  --c-ink: #18191B;
+  --c-muted: #4A5056;
+  --c-rule: #C5CBCF;
+  --c-accent: #C4261C;      /* Laravel red, darkened for contrast */
+  --c-accent-ink: #FFFFFF;
+  --c-accent-soft: #E3C3BF;
+  --c-link: #A8201A;
+  --c-mark: #FBD5CF;        /* key tint */
+  --c-warn: #8A5A00;
+  --c-focus: #C4261C;
+  --c-code-inline: #DCE1E4;
+  --c-hover: rgba(196, 38, 28, 0.07);
+  --c-rail: #2C3136;
+  --radius-form: 2px;
+
+  --shiki-background: #FFFFFF;
+  --shiki-foreground: #18191B;
+  --shiki-token-keyword: #A8201A;
+  --shiki-token-string: #1F6338;
+  --shiki-token-string-expression: #1F6338;
+  --shiki-token-comment: #596068;
+  --shiki-token-constant: #1D4F91;
+  --shiki-token-function: #6A3A8C;
+  --shiki-token-parameter: #18191B;
+  --shiki-token-punctuation: #3A4046;
+}
+
+[data-subject="itelec3c"] h1 { font-weight: 700; }
+
+/* Hub header: the order ticket. Red header strip, torn bottom edge. */
+[data-subject="itelec3c"] .sheet-head {
+  position: relative;
+  overflow: visible;
+  margin-bottom: 0.75rem;
+  border: 0;
+  border-top: 10px solid var(--c-accent);
+  box-shadow: 0 1px 2px rgba(24, 25, 27, 0.12);
+}
+[data-subject="itelec3c"] .sheet-head::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 0.6rem;
+  background:
+    linear-gradient(135deg, var(--c-surface) 33%, transparent 33%) 0 0 / 0.9rem 0.6rem repeat-x,
+    linear-gradient(225deg, var(--c-surface) 33%, transparent 33%) 0 0 / 0.9rem 0.6rem repeat-x;
+}
+[data-subject="itelec3c"] .sheet-title { border-bottom: 1px dashed var(--c-rule); }
+[data-subject="itelec3c"] .sheet-fields > div { border-color: var(--c-rule); }
+[data-subject="itelec3c"] .sheet-fields dt { color: var(--c-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em; }
+
+/* Topic page: each part of the exam hangs from the steel ticket rail. */
+[data-subject="itelec3c"] .prose h2 {
+  padding: 0.6rem 0.9rem;
+  background: var(--c-rail);
+  color: #FFFFFF;
+  border-bottom: 4px solid var(--c-accent);
+  font-size: clamp(1.25rem, 3.4vw, 1.6rem);
+}
+[data-subject="itelec3c"] .prose h2 a { color: inherit; }
+
+@media print {
+  [data-subject="itelec3c"] .prose h2 { background: none; color: #000; border-bottom: 2px solid #000; }
+}

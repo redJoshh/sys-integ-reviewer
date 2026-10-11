@@ -39,6 +39,7 @@ const FONT_SOURCES = {
   'Bricolage Grotesque': { pkg: 'bricolage-grotesque', faces: [[500, 'normal'], [800, 'normal']], fallback: 'system-ui, sans-serif' },
   'DotGothic16': { pkg: 'dotgothic16', faces: [[400, 'normal']], fallback: "Consolas, 'Courier New', monospace" },
   'Kalam': { pkg: 'kalam', faces: [[700, 'normal']], fallback: "'Segoe Print', 'Comic Sans MS', cursive" },
+  'Oswald': { pkg: 'oswald', faces: [[500, 'normal'], [700, 'normal']], fallback: "'Arial Narrow', system-ui, sans-serif" },
   'Red Hat Display': { pkg: 'red-hat-display', faces: [[700, 'normal'], [900, 'normal']], fallback: 'system-ui, sans-serif' },
   'Zilla Slab': { pkg: 'zilla-slab', faces: [[600, 'normal'], [700, 'normal']], fallback: 'Rockwell, Georgia, serif' },
   'JetBrains Mono': { pkg: 'jetbrains-mono', faces: [[400, 'normal'], [700, 'normal']], fallback: 'ui-monospace, Consolas, monospace' },
@@ -409,6 +410,7 @@ function resolveLocal(href, env, kind) {
 const QSTART = /^\*\*(\d+)\.\s+(.+?)\\?\*\\?\*\s*$/;
 const CHOICE = /^\s*[-*+]\s+\[( |x|X)?\]\s?(.*)$/;
 const ANSWER_MARK = /^\s*(?:\u2705|\u2714\uFE0F?|\u2611\uFE0F?)\s*/u;
+const TRAILING_MARK = /\s*(?:\u2705|\u2714\uFE0F?|\u2611\uFE0F?)\s*(?:\*\(([\s\S]+?)\)\.?\*\.?|_\(([\s\S]+?)\)\.?_\.?)?\s*$/u;
 const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
 const HR = /^\s{0,3}([-*_])(\s*\1){2,}\s*$/;
 const QA_Q = /^Q:\s+(.*)$/;
@@ -496,11 +498,133 @@ function resolveWikilink(target, topic) {
   return pool.find((t) => t.slug === want) || pool.find((t) => t.title.toLowerCase() === maybeTopic.toLowerCase()) || null;
 }
 
+// --- Answer keys: a blockquote headed "Answer Key" that lists "**N.** answer".
+// Each answer is matched back to item N above it in the same part (a numbered
+// line, a "### N." heading, or a "**N. ...**" stem). The item becomes an open
+// question with its own reveal, and the key block is removed from the flow.
+// Open questions count and are searchable, but are not graded.
+
+const KEY_HEAD = /^>\s*(?:#{1,6}\s*)?.*\banswer key\b/i;
+const KEY_ENTRY = /^>\s*[-*+]\s+\*\*(\d+)\.[^*]*\*\*:?\s*(.*)$/;
+const ITEM_START = /^(?:(\d+)\.\s+|#{2,6}\s+(\d+)\.\s+|\*\*(\d+)\.\s+)/;
+
+function fencedLines(lines) {
+  const inside = [];
+  let fence = null;
+  for (const l of lines) {
+    if (fence) { inside.push(true); if (isFenceClose(l, fence)) fence = null; continue; }
+    const f = l.match(FENCE_OPEN);
+    if (f) fence = f[1];
+    inside.push(Boolean(f));
+  }
+  return inside;
+}
+
+function applyAnswerKeys(lines, env, sectionLevel) {
+  const fenced = fencedLines(lines);
+  const edits = [];
+  let regionStart = 0;
+  let section = null;
+  let skippedTitle = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (fenced[i]) continue;
+    const l = lines[i];
+    const h = l.match(HEADING);
+    if (h) {
+      const level = h[1].length;
+      if (level === 1 && env.topic.dropFirstH1 && !skippedTitle) { skippedTitle = true; continue; }
+      if (level <= sectionLevel) { section = { text: headingText(h[2]), id: slugify(headingText(h[2])) || 'section' }; regionStart = i + 1; }
+      continue;
+    }
+    if (HR.test(l)) { regionStart = i + 1; continue; }
+    if (!KEY_HEAD.test(l)) continue;
+
+    let end = i;
+    while (end + 1 < lines.length && lines[end + 1].startsWith('>')) end++;
+    const answers = new Map();
+    let lastN = null;
+    for (let k = i + 1; k <= end; k++) {
+      const m = lines[k].match(KEY_ENTRY);
+      if (m) { lastN = Number(m[1]); answers.set(lastN, [m[2]]); continue; }
+      const text = lines[k].replace(/^>\s?/, '').trim();
+      if (lastN !== null && text) answers.get(lastN).push(text);
+    }
+
+    const starts = [];
+    for (let k = regionStart; k < i; k++) {
+      if (fenced[k]) continue;
+      const m = lines[k].match(ITEM_START);
+      const n = m && Number(m[1] || m[2] || m[3]);
+      if (n && answers.has(n) && !starts.some((s) => s.n === n)) starts.push({ n, k });
+    }
+    for (const n of answers.keys()) {
+      if (!starts.some((s) => s.n === n)) warn(`${env.rel}: the answer key has an entry for ${n}, but no item ${n} was found above it.`);
+    }
+    starts.forEach(({ n, k }, s) => {
+      let last = s + 1 < starts.length ? starts[s + 1].k - 1 : i - 1;
+      while (last > k && !lines[last].trim()) last--;
+      if (HR.test(lines[last])) last--;
+      edits.push({ start: k, end: last, html: renderOpenQuestion(n, lines.slice(k, last + 1), answers.get(n), fenced.slice(k, last + 1), env, section) });
+    });
+    edits.push({ start: i, end, html: null });
+    regionStart = end + 1;
+    i = end;
+  }
+
+  const out = [...lines];
+  for (const e of edits.sort((a, b) => b.start - a.start)) {
+    out.splice(e.start, e.end - e.start + 1, ...(e.html ? ['', placeholder(env, e.html), ''] : []));
+  }
+  return out;
+}
+
+function renderOpenQuestion(num, itemLines, answerLines, fenced, env, section) {
+  const [first, ...rest] = itemLines.map((l, k) => (fenced[k] ? l : transformInline(l, env)));
+  let stem;
+  let m;
+  if ((m = first.match(/^#{2,6}\s+\d+\.\s+(.*?)\s*#*\s*$/))) stem = m[1];
+  else if ((m = first.match(/^\*\*\d+\.\s+(.+?)\*\*\s*(.*)$/))) { stem = m[1]; if (m[2]) rest.unshift(m[2]); }
+  else stem = first.replace(/^\d+\.\s+/, '');
+
+  // "[a] up | [b] create | ..." reads better as a list.
+  let answer = answerLines.join('\n');
+  const parts = answer.split(/\s+\|\s+/);
+  if (parts.length >= 3) answer = parts.map((p) => `- ${p}`).join('\n');
+  answer = answer.split('\n').map((l) => transformInline(l, env)).join('\n');
+
+  const id = uniqueId(env, `${section ? section.id : 'question'}-q${num}`);
+  const stemHtml = md.renderInline(stem, env);
+  const extra = rest.join('\n').trim();
+  const extraHtml = extra ? md.render(extra, env) : '';
+  const answerHtml = md.render(answer, env);
+  env.questions.push({
+    n: num,
+    id,
+    section: section ? section.text : null,
+    sectionId: section ? section.id : null,
+    text: htmlToText(stemHtml),
+    answered: true,
+    open: true,
+    hay: [htmlToText(stemHtml), htmlToText(extraHtml), htmlToText(answerHtml)].join(' ').replace(/\s+/g, ' '),
+  });
+
+  return `<div class="q q-open" id="${id}">
+<p class="q-num" aria-hidden="true">${num}</p>
+<p class="q-stem"><span class="visually-hidden">Question ${num}: </span>${stemHtml}</p>
+${extraHtml ? `<div class="q-extra">${extraHtml}</div>` : ''}
+<details class="answer">
+<summary><span class="when-closed">Show answer</span><span class="when-open">Hide answer</span></summary>
+<div class="answer-body answer-open">${answerHtml}</div>
+</details>
+</div>`;
+}
+
 function prepass(body, env) {
-  const lines = body.split(/\r?\n/);
+  const sectionLevel = env.topic.headingShift ? 1 : 2;
+  const lines = applyAnswerKeys(body.split(/\r?\n/), env, sectionLevel);
   const blocks = toBlocks(lines);
   const replace = [];
-  const sectionLevel = env.topic.headingShift ? 1 : 2;
   let section = null;
   let skippedTitle = false;
 
@@ -600,6 +724,9 @@ function parseQuestion(blocks, i, env, section) {
     explanation = next.lines.map((l) => l.replace(/^>\s?/, '')).join('\n');
     last += 1;
   }
+  // A note written after the ✅ on a choice line explains the answer.
+  const notes = choices ? choices.map((c) => c.note).filter(Boolean) : [];
+  if (!explanation && notes.length) explanation = notes.join('\n\n');
 
   const id = uniqueId(env, `${section ? section.id : 'question'}-q${num}`);
   if (match) return { html: renderMatch({ id, num, stem, pre, match, explanation, env, section }), last };
@@ -731,13 +858,27 @@ function readChoices(lines) {
     const c = out[out.length - 1];
     if (c && /(`{3,}|~{3,})/.test(m && c.more.length === 0 ? c.first : l)) c.inFence = !c.inFence;
   }
-  return out.map(({ correct, first, more }) => {
-    if (!more.length) return { correct, text: first, block: false };
+  // Notes may mark the answer at the end of the line instead ("Taylor Otwell ✅"),
+  // optionally followed by a note in parentheses that explains it.
+  for (const c of out) {
+    const t = c.first.match(TRAILING_MARK);
+    if (!t) continue;
+    c.correct = true;
+    c.first = c.first.slice(0, t.index).trim();
+    c.note = (t[1] || t[2] || '').trim() || null;
+  }
+  // Choices that carry their own letters ("A. ...", "B. ...") lose them: the
+  // page draws its own letter bubbles.
+  if (out.length > 1 && out.every((c, k) => new RegExp(`^${String.fromCharCode(65 + k)}[.)]\\s+`).test(c.first))) {
+    for (const c of out) c.first = c.first.replace(/^[A-Z][.)]\s+/, '');
+  }
+  return out.map(({ correct, first, more, note }) => {
+    if (!more.length) return { correct, text: first, block: false, note };
     const indent = Math.min(...more.filter((l) => l.trim()).map((l) => l.match(/^\s*/)[0].length));
     const body = more.map((l) => l.slice(Math.min(indent, l.match(/^\s*/)[0].length)));
     const hasFence = more.some((l) => /^\s*(`{3,}|~{3,})/.test(l)) || /^(`{3,}|~{3,})/.test(first);
-    if (!hasFence) return { correct, text: [first, ...more.map((l) => l.trim())].join(' '), block: false };
-    return { correct, text: [first, ...body].join('\n').trim(), block: true };
+    if (!hasFence) return { correct, text: [first, ...more.map((l) => l.trim())].join(' '), block: false, note };
+    return { correct, text: [first, ...body].join('\n').trim(), block: true, note };
   });
 }
 
