@@ -164,6 +164,8 @@ figure.code pre code { font: inherit; }
   line-height: 1.1;
   text-align: right;
 }
+/* Lettered parts ("65A") need to fit the same column. */
+.q-num-part { font-size: 1.1rem; line-height: 1.5; }
 .q-stem { grid-row: 1; margin: 0 0 0.75rem; font-weight: 700; }
 .q-extra > :last-child { margin-bottom: 0.75rem; }
 /* Long fill-in blanks ("____________") must wrap on narrow screens. */

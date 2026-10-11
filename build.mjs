@@ -25,6 +25,11 @@ const require = createRequire(import.meta.url);
 // and Vercel, "/<repo>" on a GitHub Pages project site. The public URL comes
 // from SITE_URL, or from what Netlify (URL) and Vercel (VERCEL_*) provide.
 const BASE = (process.env.BASE_PATH || '').trim().replace(/\/+$/, '').replace(/^(?=[^/])/, '/');
+if (/^\/?[A-Za-z]:[\\/]/.test(BASE)) {
+  // Git Bash on Windows rewrites "/repo" into "C:/Program Files/Git/repo".
+  console.error(`BASE_PATH became a Windows path ("${process.env.BASE_PATH}"). In Git Bash, run with MSYS_NO_PATHCONV=1, or use "npm run preview:pages".`);
+  process.exit(1);
+}
 setBase(BASE);
 const vercelHost = process.env.VERCEL_ENV === 'production' ? process.env.VERCEL_PROJECT_PRODUCTION_URL : process.env.VERCEL_URL;
 let origin = (process.env.SITE_URL || process.env.URL || (vercelHost ? `https://${vercelHost}` : `http://localhost:${process.env.PORT || 3000}`)).replace(/\/+$/, '');
@@ -513,10 +518,15 @@ function resolveWikilink(target, topic) {
 // line, a "### N." heading, or a "**N. ...**" stem). The item becomes an open
 // question with its own reveal, and the key block is removed from the flow.
 // Open questions count and are searchable, but are not graded.
+// Items split into parts ("#### 65A.") are keyed as "**65A.**". A note entry
+// ("- **63:** why") adds to item 63's revealed answer; a bold label on its own
+// line ("**Why:**") ends the previous entry and is dropped.
 
 const KEY_HEAD = /^>\s*(?:#{1,6}\s*)?.*\banswer key\b/i;
-const KEY_ENTRY = /^>\s*[-*+]\s+\*\*(\d+)\.[^*]*\*\*:?\s*(.*)$/;
-const ITEM_START = /^(?:(\d+)\.\s+|#{2,6}\s+(\d+)\.\s+|\*\*(\d+)\.\s+)/;
+const KEY_ENTRY = /^>\s*[-*+]\s+\*\*(\d+[A-Z]?)\.[^*]*\*\*:?\s*(.*)$/;
+const KEY_NOTE = /^>\s*[-*+]\s+\*\*(\d+[A-Z]?):\*\*\s*(.*)$/;
+const KEY_LABEL = /^>\s*\*\*[^*]+\*\*:?\s*$/;
+const ITEM_START = /^(?:(\d+)\.\s+|#{2,6}\s+(\d+[A-Z]?)\.\s+|\*\*(\d+)\.\s+)/;
 
 function fencedLines(lines) {
   const inside = [];
@@ -553,29 +563,40 @@ function applyAnswerKeys(lines, env, sectionLevel) {
     let end = i;
     while (end + 1 < lines.length && lines[end + 1].startsWith('>')) end++;
     const answers = new Map();
-    let lastN = null;
+    const notes = new Map();
+    let target = null;
     for (let k = i + 1; k <= end; k++) {
-      const m = lines[k].match(KEY_ENTRY);
-      if (m) { lastN = Number(m[1]); answers.set(lastN, [m[2]]); continue; }
+      let m = lines[k].match(KEY_ENTRY);
+      if (m) { target = [m[2]]; answers.set(m[1], target); continue; }
+      if ((m = lines[k].match(KEY_NOTE))) {
+        if (!notes.has(m[1])) notes.set(m[1], []);
+        target = notes.get(m[1]);
+        target.push(m[2]);
+        continue;
+      }
+      if (KEY_LABEL.test(lines[k])) { target = null; continue; }
       const text = lines[k].replace(/^>\s?/, '').trim();
-      if (lastN !== null && text) answers.get(lastN).push(text);
+      if (target && text) target.push(text);
     }
 
     const starts = [];
     for (let k = regionStart; k < i; k++) {
       if (fenced[k]) continue;
       const m = lines[k].match(ITEM_START);
-      const n = m && Number(m[1] || m[2] || m[3]);
+      const n = m && (m[1] || m[2] || m[3]);
       if (n && answers.has(n) && !starts.some((s) => s.n === n)) starts.push({ n, k });
     }
-    for (const n of answers.keys()) {
+    for (const n of [...answers.keys(), ...notes.keys()]) {
       if (!starts.some((s) => s.n === n)) warn(`${env.rel}: the answer key has an entry for ${n}, but no item ${n} was found above it.`);
     }
     starts.forEach(({ n, k }, s) => {
       let last = s + 1 < starts.length ? starts[s + 1].k - 1 : i - 1;
+      // A heading that is not itself a keyed item (such as "### 65." above
+      // its parts) ends the item and stays in the page flow.
+      for (let j = k + 1; j <= last; j++) if (!fenced[j] && HEADING.test(lines[j])) { last = j - 1; break; }
       while (last > k && !lines[last].trim()) last--;
       if (HR.test(lines[last])) last--;
-      edits.push({ start: k, end: last, html: renderOpenQuestion(n, lines.slice(k, last + 1), answers.get(n), fenced.slice(k, last + 1), env, section) });
+      edits.push({ start: k, end: last, html: renderOpenQuestion(n, lines.slice(k, last + 1), answers.get(n), notes.get(n), fenced.slice(k, last + 1), env, section) });
     });
     edits.push({ start: i, end, html: null });
     regionStart = end + 1;
@@ -589,11 +610,11 @@ function applyAnswerKeys(lines, env, sectionLevel) {
   return out;
 }
 
-function renderOpenQuestion(num, itemLines, answerLines, fenced, env, section) {
+function renderOpenQuestion(num, itemLines, answerLines, noteLines, fenced, env, section) {
   const [first, ...rest] = itemLines.map((l, k) => (fenced[k] ? l : transformInline(l, env)));
   let stem;
   let m;
-  if ((m = first.match(/^#{2,6}\s+\d+\.\s+(.*?)\s*#*\s*$/))) stem = m[1];
+  if ((m = first.match(/^#{2,6}\s+\d+[A-Z]?\.\s+(.*?)\s*#*\s*$/))) stem = m[1];
   else if ((m = first.match(/^\*\*\d+\.\s+(.+?)\*\*\s*(.*)$/))) { stem = m[1]; if (m[2]) rest.unshift(m[2]); }
   else stem = first.replace(/^\d+\.\s+/, '');
 
@@ -616,11 +637,12 @@ function renderOpenQuestion(num, itemLines, answerLines, fenced, env, section) {
   if (parts.length >= 3) answer = parts.map((p) => `- ${p}`).join('\n');
   answer = answer.split('\n').map((l) => transformInline(l, env)).join('\n');
 
-  const id = uniqueId(env, `${section ? section.id : 'question'}-q${num}`);
+  const id = uniqueId(env, `${section ? section.id : 'question'}-q${String(num).toLowerCase()}`);
   const stemHtml = md.renderInline(stem, env);
   const extra = rest.join('\n').trim();
   const extraHtml = extra ? md.render(extra, env) : '';
-  const answerHtml = md.render(answer, env);
+  const note = noteLines ? noteLines.map((l) => transformInline(l, env)).join('\n') : '';
+  const answerHtml = md.render(answer, env) + (note ? md.render(note, env) : '');
   env.questions.push({
     n: num,
     id,
@@ -633,7 +655,7 @@ function renderOpenQuestion(num, itemLines, answerLines, fenced, env, section) {
   });
 
   return `<div class="q q-open${blanks ? ' q-blank' : ''}" id="${id}"${blanks ? ` data-blanks="${esc(JSON.stringify(blanks))}"` : ''}>
-<p class="q-num" aria-hidden="true">${num}</p>
+<p class="q-num${/[A-Z]/.test(num) ? ' q-num-part' : ''}" aria-hidden="true">${num}</p>
 <p class="q-stem"><span class="visually-hidden">Question ${num}: </span>${stemHtml}</p>
 ${extraHtml ? `<div class="q-extra">${extraHtml}</div>` : ''}
 <details class="answer">
