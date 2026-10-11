@@ -22,9 +22,9 @@
 
 **3. What does `apt-get upgrade` do?**
 
-- [x] ✅ Operating system updates are downloaded and will be installed.
-- [ ] Every application installed on the system will update itself to the latest version.
-- [x] ✅ Operating system updates are downloaded and will be installed. _(duplicate of the first option in the source file)_
+- [ ] Operating system updates are downloaded and will be installed.
+- [x] ✅ Every application installed on the system will update itself to the latest version.
+- [] Operating system updates are downloaded and will be installed. _(duplicate of the first option in the source file)_
 - [ ] The remote repository of applications and dependencies will be updated to the latest version.
 
 > **Explanation:** `apt-get upgrade` downloads and installs newer versions of already-installed packages. Refreshing the repository list is the job of `apt-get update`. It doesn't "make every application update itself," and it won't remove or add new packages. _(Note: this option appears twice in your file; either copy is the correct one.)_
@@ -368,7 +368,8 @@ print(addition)
 
 ---
 
-**35. `print(fruits[1:4])` displays:**
+**35. `fruits = ["apple", "banana", "cherry", "date", "elderberry"]`
+`print(fruits[1:4])` displays:**
 
 - [ ] `["apple", "elderberry"]`
 - [ ] `["banana", "cherry", "date", "elderberry"]`
