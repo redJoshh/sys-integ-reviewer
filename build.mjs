@@ -37,6 +37,7 @@ const FONT_SOURCES = {
   'Atkinson Hyperlegible': { pkg: 'atkinson-hyperlegible', faces: [[400, 'normal'], [400, 'italic'], [700, 'normal']], fallback: 'system-ui, sans-serif' },
   'Barlow Condensed': { pkg: 'barlow-condensed', faces: [[500, 'normal'], [700, 'normal']], fallback: "'Arial Narrow', system-ui, sans-serif" },
   'Bricolage Grotesque': { pkg: 'bricolage-grotesque', faces: [[500, 'normal'], [800, 'normal']], fallback: 'system-ui, sans-serif' },
+  'DotGothic16': { pkg: 'dotgothic16', faces: [[400, 'normal']], fallback: "Consolas, 'Courier New', monospace" },
   'Kalam': { pkg: 'kalam', faces: [[700, 'normal']], fallback: "'Segoe Print', 'Comic Sans MS', cursive" },
   'Red Hat Display': { pkg: 'red-hat-display', faces: [[700, 'normal'], [900, 'normal']], fallback: 'system-ui, sans-serif' },
   'Zilla Slab': { pkg: 'zilla-slab', faces: [[600, 'normal'], [700, 'normal']], fallback: 'Rockwell, Georgia, serif' },
@@ -614,6 +615,7 @@ function parseQuestion(blocks, i, env, section) {
     section: section ? section.text : null,
     sectionId: section ? section.id : null,
     text: htmlToText(stemHtml),
+    answered: correct.length > 0,
     hay: [htmlToText(stemHtml), ...choiceHtml.map(htmlToText), htmlToText(explanationHtml)].join(' ').replace(/\s+/g, ' '),
   });
 
@@ -688,6 +690,7 @@ function renderMatch({ id, num, stem, pre, match, explanation, env, section }) {
     section: section ? section.text : null,
     sectionId: section ? section.id : null,
     text: htmlToText(stemHtml),
+    answered: true,
     hay: [htmlToText(stemHtml), ...termHtml.map(htmlToText), ...descHtml.map(htmlToText), htmlToText(explanationHtml)].join(' ').replace(/\s+/g, ' '),
   });
 
@@ -780,7 +783,9 @@ function firstParagraph(body) {
 function questionSummary(t) {
   if (!t.questions.length) return '';
   const sections = t.headings.filter((h) => h.level === 2 && h.questions).length;
-  return `${t.questions.length} practice questions${sections > 1 ? ` across ${sections} sections` : ''}, with answers.`;
+  const answered = t.questions.filter((q) => q.answered).length;
+  const key = answered === t.questions.length ? ', with answers' : answered ? `, ${answered} with answers` : '';
+  return `${t.questions.length} practice questions${sections > 1 ? ` across ${sections} sections` : ''}${key}.`;
 }
 
 function trimTo(text, max) {

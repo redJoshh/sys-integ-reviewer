@@ -1,0 +1,10 @@
+{
+  "title": "LT1",
+  "description": "Questions on Python basics, exceptions, modules, and Linux commands for System Integration and Architecture. No answers are marked in the notes yet.",
+  "accent": "#4B3A86",
+  "design": {
+    "mood": "Line-printer job printout from the server room: greenbar paper, sprocket-hole margins, violet ribbon ink",
+    "palette": ["#FBFCF8", "#1F2421", "#4B3A86", "#DAD1F3", "#9E2F2F", "#B9CDB3"],
+    "fonts": { "display": "DotGothic16", "body": "Atkinson Hyperlegible" }
+  }
+}

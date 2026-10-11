@@ -1,0 +1,69 @@
+/* LT1: a line-printer job printout from the server room.
+   Continuous-feed paper with greenbar bands, sprocket holes down the margins,
+   violet ribbon ink for numbers and headings. */
+
+[data-subject="lt1"] {
+  --c-bg: #FBFCF8;          /* paper */
+  --c-surface: #FFFFFF;
+  --c-ink: #1F2421;         /* ribbon ink */
+  --c-muted: #4A544D;
+  --c-rule: #B9CDB3;        /* perforation */
+  --c-accent: #4B3A86;      /* ribbon violet */
+  --c-accent-ink: #FFFFFF;
+  --c-accent-soft: #CFDCCB;
+  --c-link: #4B3A86;
+  --c-mark: #DAD1F3;        /* key lilac */
+  --c-warn: #9E2F2F;
+  --c-focus: #4B3A86;
+  --c-code-inline: #E4EBE1;
+  --c-hover: rgba(75, 58, 134, 0.08);
+  --c-band: #E1EEDC;        /* greenbar */
+  --radius-form: 0;
+
+  --shiki-background: #FFFFFF;
+  --shiki-foreground: #1F2421;
+  --shiki-token-keyword: #4B3A86;
+  --shiki-token-string: #8A3A1C;
+  --shiki-token-string-expression: #8A3A1C;
+  --shiki-token-comment: #56615A;
+  --shiki-token-constant: #0F5A6B;
+  --shiki-token-function: #2C5E2A;
+  --shiki-token-parameter: #1F2421;
+  --shiki-token-punctuation: #3B443E;
+}
+
+/* DotGothic16 has one weight; keep the print head from faux-bolding. */
+[data-subject="lt1"] h1,
+[data-subject="lt1"] .prose h2,
+[data-subject="lt1"] .q-num,
+[data-subject="lt1"] .sheet-fields dt { font-weight: 400; }
+
+/* Hub header: the job banner page, with a tractor-feed margin down the left. */
+[data-subject="lt1"] .sheet-head {
+  padding-left: 1.25rem;
+  border: 1px solid var(--c-rule);
+  background:
+    radial-gradient(circle, var(--c-bg) 0 0.3rem, var(--c-rule) 0.3rem 0.36rem, transparent 0.37rem) left top / 1.25rem 1.25rem repeat-y,
+    var(--c-surface);
+}
+/* Perforation between the feed margin and the page. */
+[data-subject="lt1"] .sheet-title,
+[data-subject="lt1"] .sheet-fields { border-left: 1px dashed var(--c-rule); }
+[data-subject="lt1"] .sheet-title { border-bottom: 1px dashed var(--c-rule); }
+[data-subject="lt1"] .sheet-fields > div { border-color: var(--c-rule); }
+[data-subject="lt1"] .sheet-fields dt { color: var(--c-accent); }
+
+/* Topic page: greenbar bands on every other question so the eye keeps its
+   row across a long test. */
+[data-subject="lt1"] .q {
+  margin: 0;
+  padding: 1.1rem 0.75rem 1.4rem 0;
+}
+[data-subject="lt1"] .q:nth-of-type(even) { background: var(--c-band); }
+[data-subject="lt1"] .q:nth-of-type(even) pre,
+[data-subject="lt1"] .q:nth-of-type(even) .shiki { background: var(--c-surface); }
+[data-subject="lt1"] .prose hr { display: none; }
+
+@media print {
+  [data-subject="lt1"] .q:nth-of-type(even) { background: none; }
+}
