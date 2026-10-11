@@ -166,6 +166,19 @@ print(addition)
 
 **16. Score = 85 with the if/elif chain. What prints?**
 
+````python
+score = 85
+if score >= 90:
+    print("Grade: A")
+elif score >= 80:
+    print("Grade: B")
+elif score >= 70:
+    print("Grade: C")
+else:
+    print("Grade: F")
+```[cite: 6]
+````
+
 - [x] ✅ Grade: B
 - [ ] Grade: F
 - [ ] Grade: C
@@ -368,8 +381,11 @@ print(addition)
 
 ---
 
-**35. `fruits = ["apple", "banana", "cherry", "date", "elderberry"]`
-`print(fruits[1:4])` displays:**
+**35. print(fruits[1:4])` displays:**
+
+```python
+`fruits = ["apple", "banana", "cherry", "date", "elderberry"]`
+```
 
 - [ ] `["apple", "elderberry"]`
 - [ ] `["banana", "cherry", "date", "elderberry"]`
@@ -411,7 +427,7 @@ print(addition)
 
 ---
 
-**39. Which except block catches `int("Two Thousand")`?**
+**39. An application prompts a user for their birth year. If the user enters string text like "Two Thousand", executing int(user_input) raises an error. Which specific except block should be used to catch this invalid string-to-integer conversion? ?**
 
 - [ ] `except TypeError:`
 - [ ] `except FileNotFoundError:`
