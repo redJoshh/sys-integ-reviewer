@@ -587,8 +587,21 @@ function renderOpenQuestion(num, itemLines, answerLines, fenced, env, section) {
   else if ((m = first.match(/^\*\*\d+\.\s+(.+?)\*\*\s*(.*)$/))) { stem = m[1]; if (m[2]) rest.unshift(m[2]); }
   else stem = first.replace(/^\d+\.\s+/, '');
 
-  // "[a] up | [b] create | ..." reads better as a list.
+  // Fill-in items can be answered on the page. Lettered blanks ("___[a]___")
+  // take their answers from "[a] `up` | [b] `create`"; a single blank
+  // ("______") accepts any code span in the key ("`app` (or `app/`)").
   let answer = answerLines.join('\n');
+  const itemText = itemLines.join('\n');
+  let blanks = null;
+  const lettered = [...answer.matchAll(/`?\[([a-z])\]`?\s*`([^`]+)`/g)].filter(([, , v]) => v.trim());
+  const codes = [...answer.matchAll(/`([^`]+)`/g)].map((c) => c[1].trim()).filter(Boolean);
+  if (lettered.length >= 2 && lettered.every(([, k]) => itemText.includes(`[${k}]`))) {
+    blanks = lettered.map(([, label, value]) => ({ label, accept: [value.trim()] }));
+  } else if ((itemText.match(/_{4,}/g) || []).length === 1 && codes.length) {
+    blanks = [{ label: '', accept: codes }];
+  }
+
+  // "[a] up | [b] create | ..." reads better as a list.
   const parts = answer.split(/\s+\|\s+/);
   if (parts.length >= 3) answer = parts.map((p) => `- ${p}`).join('\n');
   answer = answer.split('\n').map((l) => transformInline(l, env)).join('\n');
@@ -605,11 +618,11 @@ function renderOpenQuestion(num, itemLines, answerLines, fenced, env, section) {
     sectionId: section ? section.id : null,
     text: htmlToText(stemHtml),
     answered: true,
-    open: true,
+    open: !blanks,
     hay: [htmlToText(stemHtml), htmlToText(extraHtml), htmlToText(answerHtml)].join(' ').replace(/\s+/g, ' '),
   });
 
-  return `<div class="q q-open" id="${id}">
+  return `<div class="q q-open${blanks ? ' q-blank' : ''}" id="${id}"${blanks ? ` data-blanks="${esc(JSON.stringify(blanks))}"` : ''}>
 <p class="q-num" aria-hidden="true">${num}</p>
 <p class="q-stem"><span class="visually-hidden">Question ${num}: </span>${stemHtml}</p>
 ${extraHtml ? `<div class="q-extra">${extraHtml}</div>` : ''}

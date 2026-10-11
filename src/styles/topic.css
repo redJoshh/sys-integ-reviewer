@@ -241,8 +241,8 @@ figure.code pre code { font: inherit; }
 .q-hint, .q-feedback { margin: 0; font-size: 0.9375rem; }
 .q-hint { color: var(--c-muted); }
 .q-feedback:empty { display: none; }
-.q.is-right .q-feedback { color: var(--c-accent); font-weight: 700; }
-.q.is-wrong .q-feedback { color: var(--c-warn); font-weight: 700; }
+.q.is-right .q-feedback { color: var(--c-right, var(--c-accent)); font-weight: 700; }
+.q.is-wrong .q-feedback { color: var(--c-wrong, var(--c-warn)); font-weight: 700; }
 .q.is-checked .q-hint { display: none; }
 
 .btn-small { padding: 0.35rem 0.75rem; font-size: 0.875rem; white-space: nowrap; }
@@ -361,6 +361,30 @@ details[open] > summary .when-closed { display: none; }
 .match-row.is-match-wrong { border: 2px solid var(--c-warn); }
 .match-row.is-match-wrong .match-select { border-color: var(--c-warn); }
 .match-row.is-match-wrong .pick-note { color: var(--c-warn); margin-left: 0; }
+
+/* Fill-in-the-blank: a text box sits where the blank was, or one labelled
+   box per lettered blank under a code snippet. */
+.blank-input {
+  width: 13ch;
+  max-width: 100%;
+  margin: 0.1rem 0.15rem;
+  padding: 0.15rem 0.4rem;
+  border: 0;
+  border-bottom: 2px solid var(--c-accent);
+  border-radius: 0;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: var(--f-code);
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+.blank-input:disabled { opacity: 1; color: var(--c-ink); }
+.blank-input.is-blank-right { border-bottom-color: var(--c-right, var(--c-accent)); border-bottom-width: 3px; }
+.blank-input.is-blank-wrong { border-bottom-color: var(--c-wrong, var(--c-warn)); text-decoration: line-through; text-decoration-color: var(--c-wrong, var(--c-warn)); }
+.blank-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem 1rem; margin: 0 0 0.75rem; }
+.blank-row { display: flex; align-items: center; gap: 0.5rem; }
+.blank-label { flex: none; font-family: var(--f-code); font-weight: 700; font-size: 0.9375rem; }
+.blank-row .blank-input { flex: 1; width: auto; min-width: 0; margin: 0; }
 
 .match-pool { display: grid; gap: 0.45rem; margin: 0 0 0.6rem; padding: 0; list-style: none; }
 .match-option { display: grid; grid-template-columns: 1.7rem minmax(0, 1fr); gap: 0.6rem; align-items: start; }

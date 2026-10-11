@@ -18,6 +18,8 @@
   --c-code-inline: #DCE1E4;
   --c-hover: rgba(196, 38, 28, 0.07);
   --c-rail: #2C3136;
+  --c-right: #1F6338;       /* red is the brand here, so "correct" is green */
+  --c-wrong: #A8201A;
   --radius-form: 2px;
 
   --shiki-background: #FFFFFF;

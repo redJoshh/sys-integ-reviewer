@@ -66,8 +66,67 @@
     wire({ kind: 'match', q, rows, inputs, answers: rows.map((r) => r.dataset.answer), btn, feedback, details: q.querySelector('details.answer'), result: null });
   };
 
+  // Fill-in-the-blank: a text box in place of the blank, or one labelled box
+  // per lettered blank ([a], [b], ...) under a code snippet.
+  const norm = (s) => s.trim().toLowerCase()
+    .replace(/^[`'"]+|[`'"]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^\$/, '')
+    .replace(/\(\)$/, '')
+    .replace(/[/;]$/, '');
+
+  const inlineBlank = (q, input) => {
+    // Swap the "______" in the question text for the text box.
+    const walker = document.createTreeWalker(q.querySelector('.q-stem'), NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const m = node.data.match(/_{4,}/);
+      if (!m) continue;
+      const after = node.splitText(m.index);
+      after.data = after.data.slice(m[0].length);
+      after.before(input);
+      return true;
+    }
+    return false;
+  };
+
+  const setupBlank = (q) => {
+    let blanks;
+    try { blanks = JSON.parse(q.dataset.blanks); } catch { return; }
+    if (!Array.isArray(blanks) || !blanks.length) return;
+    const num = q.querySelector('.q-num') ? q.querySelector('.q-num').textContent.trim() : '';
+    const inputs = blanks.map((b, i) => {
+      const input = el('input', 'blank-input');
+      input.type = 'text';
+      input.id = `${q.id}-b${i}`;
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+      input.setAttribute('autocapitalize', 'off');
+      return input;
+    });
+    let after = q.querySelector('.q-extra') || q.querySelector('.q-stem');
+    if (blanks.length === 1 && !blanks[0].label && inlineBlank(q, inputs[0])) {
+      inputs[0].setAttribute('aria-label', `Your answer for question ${num}`);
+    } else {
+      const grid = el('div', 'blank-grid');
+      inputs.forEach((input, i) => {
+        const row = el('div', 'blank-row');
+        const label = el('label', 'blank-label', blanks[i].label ? `[${blanks[i].label}]` : 'Your answer');
+        label.htmlFor = input.id;
+        row.append(label, input);
+        grid.append(row);
+      });
+      after.after(grid);
+      after = grid;
+    }
+    const { btn, feedback } = addControls(q, after, blanks.length > 1 ? `Fill in all ${blanks.length} blanks.` : '');
+    wire({ kind: 'blank', q, inputs, blanks, btn, feedback, details: q.querySelector('details.answer'), result: null });
+  };
+
+  const blankRight = (blank, value) => blank.accept.some((a) => norm(a) === norm(value));
+
   questions.forEach((q) => {
     if (q.classList.contains('q-match')) { setupMatch(q); return; }
+    if (q.classList.contains('q-blank')) { setupBlank(q); return; }
     const choices = [...q.querySelectorAll('.choice')];
     const correct = choices.map((c, i) => (c.classList.contains('is-correct') ? i : -1)).filter((i) => i >= 0);
     if (!choices.length || !correct.length) return; // nothing to grade against
@@ -97,6 +156,19 @@
   if (!items.length) return;
 
   function check(item) {
+    if (item.kind === 'blank') {
+      const picked = item.inputs.map((i) => i.value.trim());
+      if (picked.some((v) => !v)) {
+        item.feedback.textContent = item.inputs.length > 1 ? 'Fill in every blank first.' : 'Type an answer first.';
+        return;
+      }
+      const right = picked.every((v, i) => blankRight(item.blanks[i], v));
+      apply(item, picked, right);
+      saved[item.q.id] = { picked, right };
+      save();
+      updateScore();
+      return;
+    }
     if (item.kind === 'match') {
       const picked = item.inputs.map((s) => s.value);
       if (picked.some((v) => !v)) { item.feedback.textContent = 'Choose a letter for every term first.'; return; }
@@ -128,7 +200,20 @@
     item.result = right ? 'right' : 'wrong';
     item.q.classList.remove('is-revealed');
     item.q.classList.add('is-checked', right ? 'is-right' : 'is-wrong');
-    if (item.kind === 'match') {
+    if (item.kind === 'blank') {
+      const missed = [];
+      item.inputs.forEach((input, i) => {
+        const good = blankRight(item.blanks[i], picked[i]);
+        input.value = picked[i];
+        input.disabled = true;
+        input.classList.add(good ? 'is-blank-right' : 'is-blank-wrong');
+        if (!good) missed.push(`${item.blanks[i].label ? `[${item.blanks[i].label}] ` : ''}${item.blanks[i].accept[0]}`);
+      });
+      const ok = item.inputs.length - missed.length;
+      if (right) item.feedback.textContent = 'Correct.';
+      else if (item.inputs.length === 1) item.feedback.textContent = `Not quite. The answer is ${missed[0]}.`;
+      else item.feedback.textContent = `${ok} of ${item.inputs.length} blanks correct. Missed: ${missed.join(', ')}.`;
+    } else if (item.kind === 'match') {
       let ok = 0;
       item.rows.forEach((row, i) => {
         const good = picked[i] === item.answers[i];
@@ -156,8 +241,13 @@
   function reset(item, user) {
     item.result = null;
     item.q.classList.remove('is-checked', 'is-right', 'is-wrong', 'is-revealed');
-    item.inputs.forEach((input) => { input.checked = false; input.value = input.tagName === 'SELECT' ? '' : input.value; input.disabled = false; });
-    (item.kind === 'match' ? item.rows : item.choices).forEach((li) => {
+    item.inputs.forEach((input) => {
+      input.checked = false;
+      if (input.tagName === 'SELECT' || item.kind === 'blank') input.value = '';
+      input.disabled = false;
+      input.classList.remove('is-blank-right', 'is-blank-wrong');
+    });
+    (item.kind === 'match' ? item.rows : item.kind === 'blank' ? [] : item.choices).forEach((li) => {
       li.classList.remove('is-picked', 'is-match-right', 'is-match-wrong');
       const note = li.querySelector('.pick-note');
       if (note) note.remove();
@@ -232,6 +322,11 @@
   for (const item of items) {
     const s = saved[item.q.id];
     if (!s || !Array.isArray(s.picked)) continue;
+    if (item.kind === 'blank') {
+      if (s.picked.length !== item.inputs.length || !s.picked.every((v) => typeof v === 'string' && v)) continue;
+      apply(item, s.picked, s.picked.every((v, i) => blankRight(item.blanks[i], v)));
+      continue;
+    }
     if (item.kind === 'match') {
       // Only restore if every saved letter still exists (the notes may have changed).
       const valid = s.picked.length === item.rows.length && s.picked.every((v) => [...item.inputs[0].options].some((o) => o.value && o.value === v));
