@@ -669,20 +669,22 @@ print(date_1 - date_2)
   import calendar
   print(calendar.weekheader(3))
   ```
-- [x] ✅ `python
-    import calendar
-    print(calendar.weekheader(2))
-    `
-- [ ] ````python
-          import calendar
-          print(calendar.week)
-          ```
-      ````
-- [ ] ````python
-          import calendar
-          print(calendar.weekheader())
-          ```
-      ````
+- [x] ✅ ````python
+  import calendar
+  print(calendar.weekheader(2))
+  `
+- [ ] `````python
+              import calendar
+              print(calendar.week)
+              ```
+          ````
+      `````
+- [ ] `````python
+              import calendar
+              print(calendar.weekheader())
+              ```
+          ````
+      `````
 
 **8. What is the expected result of executing the following code?**
 
@@ -947,24 +949,27 @@ print(a, b, c)
   b = random.randrange(10, 100, 3)
   c = random.choice((0, 100, 3))
   ```
-- [ ] ````python
-          a = random.choice((0, 100, 3))
-          b = random.randrange(10, 100, 3)
-          c = random.randint(0, 100)
-          ```
-      ````
-- [ ] ````python
-          a = random.randrange(10, 100, 3)
-          b = random.randint(0, 100)
-          c = random.choice((0, 100, 3))
-          ```
-      ````
-- [ ] ````python
-          a = random.randint(0, 100)
-          b = random.choice((0, 100, 3))
-          c = random.randrange(10, 100, 3)
-          ```
-      ````
+- [ ] `````python
+              a = random.choice((0, 100, 3))
+              b = random.randrange(10, 100, 3)
+              c = random.randint(0, 100)
+              ```
+          ````
+      `````
+- [ ] `````python
+              a = random.randrange(10, 100, 3)
+              b = random.randint(0, 100)
+              c = random.choice((0, 100, 3))
+              ```
+          ````
+      `````
+- [ ] `````python
+              a = random.randint(0, 100)
+              b = random.choice((0, 100, 3))
+              c = random.randrange(10, 100, 3)
+              ```
+          ````
+      `````
 
 **11. What is the expected result of the following code?**
 
