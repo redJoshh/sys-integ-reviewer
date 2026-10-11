@@ -2,7 +2,7 @@
 
 **Instructor's Note:** Welcome to your comprehensive Laravel architecture and implementation reviewer! This exam covers Foundations, Folder Structure, MVC, Routing, Blade, Middleware, Migrations, Eloquent ORM, and Form Validation.
 
-### Grading Breakdown:
+## Grading Breakdown
 
 - **Part I: Multiple Choice (Items 1–25)** – 1 point each (25 points)
 - **Part II: True or False (Items 26–40)** – 1 point each (15 points)
@@ -458,9 +458,9 @@ class ProductController extends Controller {
     }
 
     public function store(Request $request) {
-        // Stop and redirect back with errors if the rules fail
-        $validated = $request->___[b]___([
-            'name' => 'required|max:255',
+        $validated = $request->validate([
+            // Rejects a name that already exists in the products table (table,column)
+            'name' => 'required|max:255|___[b]___:products,name',
             'description' => 'required|min:10',
         ]);
 
@@ -546,14 +546,15 @@ class ProductController extends Controller {
 > - **62. Model:** `[a]` `Model` | `[b]` `SoftDeletes` | `[c]` `fillable` | `[d]` `belongsTo` | `[e]` `User`
 > - **63. Middleware:** `[a]` `handle` | `[b]` `role` | `[c]` `redirect` | `[d]` `next` | `[e]` `alias`
 > - **64. Routes & Blade:** `[a]` `middleware` | `[b]` `group` | `[c]` `name` | `[d]` `@csrf` | `[e]` `old`
-> - **65A. Create & Read:** `[a]` `paginate` | `[b]` `validate` | `[c]` `products` | `[d]` `create` | `[e]` `findOrFail`
+> - **65A. Create & Read:** `[a]` `paginate` | `[b]` `unique` | `[c]` `products` | `[d]` `create` | `[e]` `findOrFail`
 > - **65B. Edit & Update:** `[a]` `view` | `[b]` `bail` | `[c]` `min` | `[d]` `update` | `[e]` `with`
 > - **65C. Delete, Archive & Restore:** `[a]` `delete` | `[b]` `onlyTrashed` | `[c]` `restore` | `[d]` `withTrashed` | `[e]` `forceDelete`
 >
 > **Why (for the reviewer notes):**
 >
 > - **63:** `alias` registers a short name so routes can write `->middleware('role:admin')`. Anything after the colon is passed to `handle()` as the extra `$role` parameter. A global middleware (`append`) runs on every request and can't receive per-route parameters, so a role check belongs in an alias. The `! $request->user() ||` guard prevents a crash when a guest reaches the route.
-> - **65A:** `paginate(10)` returns a paginator that knows the total and current page, so `links()` works; `take()` only caps rows. `$request->user()->products()->create(...)` fills `user_id` through the `hasMany` relationship, so it needs `products()` on the `User` model. `findOrFail` throws a `ModelNotFoundException`, which Laravel renders as a 404.
+> - **65A (`unique`):** `unique:products,name` is a database check on `table,column`. It fails if another row already has that value. Note that soft-deleted (archived) rows are still in the table, so an archived product's name still counts as taken. To ignore archived rows, use `Rule::unique('products', 'name')->whereNull('deleted_at')`.
+> - **65B (`update`):** the same `unique` rule would reject the record's own unchanged name when editing. The fix is `Rule::unique('products', 'name')->ignore($id)`.
 > - **65B:** `bail` stops validating a field after its first failure. `with('success', ...)` flashes a one-time session message.
 > - **65C:** `delete()` becomes a soft delete only because of the `SoftDeletes` trait. `restore()` and `forceDelete()` take a raw `$id` because route-model binding excludes archived rows.
 
@@ -608,6 +609,7 @@ echo $product->created_at->diffForHumans();
 _Question:_ Predict the outcome of running this code. Will it output `"5 minutes ago"` or fail? Explain why.
 
 **70. Scenario: Soft Delete Query Filtering**
+
 _Setup:_ The `products` table has **5 rows** with `user_id = 1`. Two (2) of those rows have a timestamp in their `deleted_at` column, while three (3) have `deleted_at = NULL`. (`Product` uses `SoftDeletes`).
 
 ```php
@@ -619,6 +621,7 @@ $totalCount   = Product::withTrashed()->where('user_id', 1)->count();
 _Question:_ What are the numeric values of `$trashedCount`, `$activeCount`, and `$totalCount`?
 
 **71. Scenario: Migration Batch Rollback**
+
 _Setup:_ `Batch 1` executed 3 migrations (`users`, `categories`, `tags`). Later, `Batch 2` executed 1 migration (`products`).
 
 ```bash

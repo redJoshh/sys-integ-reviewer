@@ -519,12 +519,14 @@ function resolveWikilink(target, topic) {
 // question with its own reveal, and the key block is removed from the flow.
 // Open questions count and are searchable, but are not graded.
 // Items split into parts ("#### 65A.") are keyed as "**65A.**". A note entry
-// ("- **63:** why") adds to item 63's revealed answer; a bold label on its own
-// line ("**Why:**") ends the previous entry and is dropped.
+// ("- **63:** why") adds to item 63's revealed answer, and a topic in brackets
+// ("- **65A (`unique`):** why") is kept as the note's label. A bold label on its
+// own line ("**Why:**") ends the previous entry and is dropped.
 
 const KEY_HEAD = /^>\s*(?:#{1,6}\s*)?.*\banswer key\b/i;
 const KEY_ENTRY = /^>\s*[-*+]\s+\*\*(\d+[A-Z]?)\.[^*]*\*\*:?\s*(.*)$/;
-const KEY_NOTE = /^>\s*[-*+]\s+\*\*(\d+[A-Z]?):\*\*\s*(.*)$/;
+const KEY_NOTE = /^>\s*[-*+]\s+\*\*(\d+[A-Z]?)(?:\s+\(([^)]+)\))?:\*\*\s*(.*)$/;
+const KEY_BULLET = /^>\s*[-*+]\s+\*\*/;
 const KEY_LABEL = /^>\s*\*\*[^*]+\*\*:?\s*$/;
 const ITEM_START = /^(?:(\d+)\.\s+|#{2,6}\s+(\d+[A-Z]?)\.\s+|\*\*(\d+)\.\s+)/;
 
@@ -571,10 +573,17 @@ function applyAnswerKeys(lines, env, sectionLevel) {
       if ((m = lines[k].match(KEY_NOTE))) {
         if (!notes.has(m[1])) notes.set(m[1], []);
         target = notes.get(m[1]);
-        target.push(m[2]);
+        // Each note is its own paragraph.
+        if (target.length) target.push('');
+        target.push(m[2] ? `**${m[2]}:** ${m[3]}` : m[3]);
         continue;
       }
       if (KEY_LABEL.test(lines[k])) { target = null; continue; }
+      if (KEY_BULLET.test(lines[k])) {
+        warn(`${env.rel}: this answer key line doesn't start with an item number such as "**12.**" or "**12:**", so it was left out: ${lines[k].replace(/^>\s*/, '').slice(0, 60)}`);
+        target = null;
+        continue;
+      }
       const text = lines[k].replace(/^>\s?/, '').trim();
       if (target && text) target.push(text);
     }
