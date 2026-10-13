@@ -1,0 +1,90 @@
+/* Technopreneurship: a DTI certificate of business name registration, the
+   first document a new venture gets. Guilloche security paper, registry-navy
+   engraving, and one gold seal on the hub header. */
+
+[data-subject="technopreneurship"] {
+  --c-bg: #E9EFEA;          /* security paper */
+  --c-surface: #FFFFFF;     /* certificate */
+  --c-ink: #161B26;
+  --c-muted: #48525E;
+  --c-rule: #A9C2B3;        /* guilloche green */
+  --c-accent: #1E3263;      /* registry navy */
+  --c-accent-ink: #FFFFFF;
+  --c-accent-soft: #C6D3CB;
+  --c-link: #1E3263;
+  --c-mark: #F2DC8C;        /* seal gold */
+  --c-warn: #8E2C48;        /* wine */
+  --c-focus: #8E2C48;
+  --c-code-inline: #DCE5DF;
+  --c-hover: rgba(30, 50, 99, 0.07);
+  --radius-form: 0;
+
+  --shiki-background: #FFFFFF;
+  --shiki-foreground: #161B26;
+  --shiki-token-keyword: #1E3263;
+  --shiki-token-string: #8E2C48;
+  --shiki-token-string-expression: #8E2C48;
+  --shiki-token-comment: #56606B;
+  --shiki-token-constant: #6B4A00;
+  --shiki-token-function: #1D5E48;
+  --shiki-token-parameter: #161B26;
+  --shiki-token-punctuation: #39424D;
+}
+
+/* Archivo is wide and "Technopreneurship" is one long word, so the titles
+   scale with the viewport to stay on screen at 360px. */
+[data-subject="technopreneurship"] h1 { font-weight: 800; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+[data-subject="technopreneurship"] .sheet-head h1 { font-size: clamp(1.6rem, 7.2vw, 4.25rem); }
+[data-subject="technopreneurship"] .topic-head h1 { font-size: clamp(1.6rem, 8.2vw, 3.75rem); }
+
+/* Hub header: the certificate. Engraved double border, a guilloche band
+   across the top, and the gold seal in the corner. */
+[data-subject="technopreneurship"] .sheet-head {
+  position: relative;
+  border: 3px double var(--c-accent);
+  background:
+    repeating-radial-gradient(circle at 50% -40%, transparent 0 5px, var(--c-rule) 5px 6px) top / 100% 0.9rem no-repeat,
+    var(--c-surface);
+  padding-top: 0.9rem;
+}
+[data-subject="technopreneurship"] .sheet-head::after {
+  content: "";
+  position: absolute;
+  top: 1.6rem;
+  right: 1.25rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--c-mark) 0 52%, #D9BC5C 52% 56%, var(--c-mark) 56% 62%, transparent 63%),
+    repeating-conic-gradient(var(--c-mark) 0 6deg, #D9BC5C 6deg 12deg);
+}
+[data-subject="technopreneurship"] .sheet-title {
+  padding-right: 7rem;
+  border-bottom: 1px solid var(--c-rule);
+}
+[data-subject="technopreneurship"] .sheet-fields > div { border-color: var(--c-rule); }
+[data-subject="technopreneurship"] .sheet-fields dt { color: var(--c-muted); font-family: var(--f-body); font-size: 0.95rem; }
+[data-subject="technopreneurship"] .sheet-fields dd { color: var(--c-accent); }
+
+/* Narrow screens: the seal moves above the title instead of beside it. */
+@media (max-width: 40rem) {
+  [data-subject="technopreneurship"] .sheet-head::after { width: 2.75rem; height: 2.75rem; top: 1.4rem; right: 1rem; }
+  [data-subject="technopreneurship"] .sheet-title { padding-top: 2.6rem; padding-right: 1.25rem; }
+}
+
+/* Topic page: each module opens on the certificate's double rule. */
+[data-subject="technopreneurship"] .prose h2 {
+  padding-bottom: 0.4rem;
+  border-bottom: 4px double var(--c-accent);
+  color: var(--c-accent);
+}
+[data-subject="technopreneurship"] .prose h2 a { color: inherit; }
+
+[data-subject="technopreneurship"] .q-num { color: var(--c-accent); }
+
+@media print {
+  [data-subject="technopreneurship"] .sheet-head { background: none; }
+  [data-subject="technopreneurship"] .sheet-head::after { display: none; }
+  [data-subject="technopreneurship"] .prose h2 { color: #000; border-bottom-color: #000; }
+}

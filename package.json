@@ -21,6 +21,7 @@
     "preview:pages": "node dev.mjs --base=/sys-integ-reviewer"
   },
   "dependencies": {
+    "@fontsource/archivo": "^5.3.0",
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/barlow-condensed": "^5.3.0",
     "@fontsource/bricolage-grotesque": "^5.3.0",

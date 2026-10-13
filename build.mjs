@@ -48,6 +48,7 @@ const SUMMARY_LENGTH = 160;
 // Self-hosted fonts available to subjects. Add a family here (and install its
 // @fontsource package) before naming it in a _subject.json.
 const FONT_SOURCES = {
+  'Archivo': { pkg: 'archivo', faces: [[700, 'normal'], [800, 'normal']], fallback: "'Arial Black', system-ui, sans-serif" },
   'Atkinson Hyperlegible': { pkg: 'atkinson-hyperlegible', faces: [[400, 'normal'], [400, 'italic'], [700, 'normal']], fallback: 'system-ui, sans-serif' },
   'Barlow Condensed': { pkg: 'barlow-condensed', faces: [[500, 'normal'], [700, 'normal']], fallback: "'Arial Narrow', system-ui, sans-serif" },
   'Bricolage Grotesque': { pkg: 'bricolage-grotesque', faces: [[500, 'normal'], [800, 'normal']], fallback: 'system-ui, sans-serif' },
@@ -387,6 +388,13 @@ function uniqueId(env, base) {
 // Resolve relative links and images against the Markdown file, copy local
 // files into dist, and rewrite .md links to topic URLs.
 function resolveLocal(link, env, kind) {
+  // In-page anchors written GitHub-style ("#module-1--intro") are re-slugged
+  // to match the heading ids this build generates.
+  if (link.startsWith('#') && link.length > 1) {
+    let frag = link.slice(1);
+    try { frag = decodeURIComponent(frag); } catch { /* keep as written */ }
+    return `#${slugify(frag) || link.slice(1)}`;
+  }
   if (/^[a-z][a-z0-9+.-]*:/i.test(link) || link.startsWith('#') || link.startsWith('//')) return link;
   if (link.startsWith('/')) return href(link); // site-root link written in the notes
   const [rawPath, hash] = link.split('#');
@@ -423,7 +431,9 @@ function resolveLocal(link, env, kind) {
 // --- wikilinks and math become placeholders that are swapped in after render.
 
 const QSTART = /^\*\*(\d+)\.\s+(.+?)\\?\*\\?\*\s*$/;
-const CHOICE = /^\s*[-*+]\s+\[( |x|X)?\]\s?(.*)$/;
+// A choice is a task-list item ("- [x] ...") or a lettered item ("- A. ...");
+// lettered choices mark their answer at the end of the line ("... ✔️").
+const CHOICE = /^\s*[-*+]\s+(?:\[( |x|X)?\]\s?|(?=[A-Z][.)]\s))(.*)$/;
 const ANSWER_MARK = /^\s*(?:\u2705|\u2714\uFE0F?|\u2611\uFE0F?)\s*/u;
 const TRAILING_MARK = /\s*(?:\u2705|\u2714\uFE0F?|\u2611\uFE0F?)\s*(?:\*\(([\s\S]+?)\)\.?\*\.?|_\(([\s\S]+?)\)\.?_\.?)?\s*$/u;
 const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;

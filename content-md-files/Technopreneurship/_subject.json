@@ -1,0 +1,10 @@
+{
+  "title": "Technopreneurship",
+  "description": "Multiple-choice review for Modules 1 to 5: technopreneurship basics, scalable business ideas, business formation, the technopreneurship ecosystem, and marketing planning.",
+  "accent": "#1E3263",
+  "design": {
+    "mood": "DTI certificate of business name registration: guilloche security paper, registry-navy engraving, a gold seal",
+    "palette": ["#E9EFEA", "#161B26", "#1E3263", "#F2DC8C", "#8E2C48", "#A9C2B3"],
+    "fonts": { "display": "Archivo", "body": "Atkinson Hyperlegible" }
+  }
+}
